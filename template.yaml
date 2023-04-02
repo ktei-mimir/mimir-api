@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Mimir API
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+
+Resources:
+  MimirApi:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Description: Mimir API
+      CodeUri: ./src/Mimir.Api/
+      Handler: Mimir.Api
+      Runtime: dotnet6
+      MemorySize: 256
+      Architectures:
+        - arm64
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          ASPNETCORE_ENVIRONMENT: Production
+      Events:
+        ProxyResource:
+          Type: HttpApi
+          Properties:
+            PayloadFormatVersion: "2.0"
+            Path: /{proxy+}
+            Method: ANY
+        RootResource:
+          PayloadFormatVersion: "2.0"
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+
+Outputs:
+  MimirApiEndpoint:
+    Description: "API Gateway endpoint URL for Mimir API"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
