@@ -2,9 +2,9 @@
 
 namespace Mimir.Application.ChatGpt;
 
-public class Choice
+public class CompletionChoice
 {
-    public Message Message { get; set; }
+    public string Text { get; set; }
     
     [JsonPropertyName("finish_reason")]
     public string FinishReason { get; set; } = string.Empty;

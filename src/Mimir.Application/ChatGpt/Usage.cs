@@ -12,4 +12,14 @@ public class Usage
     
     [JsonPropertyName("total_tokens")]
     public int TotalTokens { get; set; }
+    
+    public Usage Add(Usage usage)
+    {
+        return new Usage
+        {
+            PromptTokens = PromptTokens + usage.PromptTokens,
+            CompletionTokens = CompletionTokens + usage.CompletionTokens,
+            TotalTokens = TotalTokens + usage.TotalTokens,
+        };
+    }
 }

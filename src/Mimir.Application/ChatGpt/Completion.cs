@@ -1,6 +1,6 @@
 ﻿namespace Mimir.Application.ChatGpt;
 
-public class ChatCompletion
+public class Completion
 {
     public string Id { get; set; } = string.Empty;
 
@@ -12,5 +12,5 @@ public class ChatCompletion
 
     public Usage Usage { get; set; } = new();
 
-    public List<ChatCompletionChoice> Choices { get; set; } = new();
+    public List<CompletionChoice> Choices { get; set; } = new();
 }

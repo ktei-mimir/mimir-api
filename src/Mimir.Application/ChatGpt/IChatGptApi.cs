@@ -8,5 +8,5 @@ public interface IChatGptApi
     Task<ChatCompletion> CreateChatCompletion([Body] CreateChatCompletionRequest request);
     
     [Post("/v1/completions")]
-    Task<ChatCompletion> CreateCompletion([Body] CreateCompletionRequest request);
+    Task<Completion> CreateCompletion([Body] CreateCompletionRequest request);
 }
