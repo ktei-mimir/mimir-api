@@ -9,6 +9,7 @@ using Mimir.Api.Configurations;
 using Mimir.Api.Security;
 using Mimir.Application.ChatGpt;
 using Mimir.Application.Conversations.CreateConversation;
+using Mimir.Infrastructure.Configurations;
 using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,11 @@ builder.Services.AddSwaggerDoc(s =>
     s.Title = "Mimir API";
     s.Version = "v1.0";
 });
+
+// register Options
+builder.Services.AddOptions<DynamoDbOptions>().Bind(builder.Configuration.GetSection(DynamoDbOptions.Key))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 // AWS services
 var awsOptions = builder.Configuration.GetAWSOptions();

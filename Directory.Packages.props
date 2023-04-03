@@ -7,11 +7,19 @@
     <PackageVersion Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.6.0" />
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="3.7.102.17" />
     <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.5" />
+    <PackageVersion Include="coverlet.collector" Version="3.1.2" />
     <PackageVersion Include="FastEndpoints" Version="5.8.1" />
     <PackageVersion Include="FastEndpoints.Swagger" Version="5.8.1" />
+    <PackageVersion Include="FluentAssertions" Version="6.10.0" />
     <PackageVersion Include="MediatR" Version="12.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.15" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="6.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageVersion Include="Refit" Version="6.3.2" />
     <PackageVersion Include="Refit.HttpClientFactory" Version="6.3.2" />
+    <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageVersion Include="xunit" Version="2.4.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.5" />
   </ItemGroup>
 </Project>

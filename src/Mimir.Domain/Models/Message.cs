@@ -4,10 +4,15 @@ namespace Mimir.Domain.Models;
 
 public class Message : Entity
 {
-    public string ConversationId { get; }
-    public string Role { get; }
-    public string Content { get; }
-    public long CreatedAt { get; }
+    public string ConversationId { get; private set; }
+    public string Role { get; private set; }
+    public string Content { get; private set; }
+    public long CreatedAt { get; private set; }
+
+    public Message() : base(EntityTypes.Message)
+    {
+        
+    }
 
     public Message(string conversationId, string role, string content, long createdAt) : base(EntityTypes.Message)
     {
