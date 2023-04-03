@@ -1,0 +1,8 @@
+version: "2.1"
+
+services:
+  dynamo:
+    image: amazon/dynamodb-local:latest
+    container_name: mimir-dynamo
+    ports:
+      - 8001:8000
