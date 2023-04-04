@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Conversations" />
+    <Folder Include="Features" />
   </ItemGroup>
 
 </Project>

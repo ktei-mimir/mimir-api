@@ -1,16 +1,21 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Runtime;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Mimir.Api.Configurations;
+using Mimir.Api.Model.Mapping;
 using Mimir.Api.Security;
 using Mimir.Application.ChatGpt;
-using Mimir.Application.Conversations.CreateConversation;
+using Mimir.Application.Features.Conversations.CreateConversation;
 using Mimir.Infrastructure.Configurations;
+using Mimir.Infrastructure.Repositories;
 using Refit;
+using IMapper = AutoMapper.IMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +72,13 @@ builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
 
+// repositories
+builder.Services.Scan(s => s
+    .FromAssembliesOf(typeof(ConversationRepository))
+    .AddClasses(c => c.InNamespaceOf(typeof(ConversationRepository)))
+    .AsImplementedInterfaces()
+    .WithScopedLifetime());
+
 // 3rd party API
 var chatGptOptions = new ChatGptOptions();
 builder.Configuration.Bind("ChatGpt", chatGptOptions);
@@ -86,8 +98,11 @@ builder.Services
 // add MediatR
 builder.Services.AddMediatR(cfg =>
 {
-    cfg.RegisterServicesFromAssemblyContaining<CreateConversationRequest>();
+    cfg.RegisterServicesFromAssemblyContaining<CreateConversationCommandHandler>();
 });
+
+// automapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // add AWS Lambda support.
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
@@ -107,4 +122,31 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerGen(); 
 }
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "text/plain";
+
+        var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+        Debug.Assert(exceptionHandlerPathFeature != null);
+        var exception = exceptionHandlerPathFeature.Error;
+
+        // Log the exception
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(exception, "An unhandled exception has occurred");
+        await context.Response.WriteAsync("An unexpected error occurred.");
+    });
+});
+
+using var scope = app.Services.CreateScope();
+var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
+mapper.ConfigurationProvider.AssertConfigurationIsValid();
+
 await app.RunAsync();
+
+// for integration test
+public partial class Program
+{
+}
