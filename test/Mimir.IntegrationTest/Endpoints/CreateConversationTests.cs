@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Mimir.Api.Model.Conversations;
 using Mimir.Application.ChatGpt;
-using Mimir.Application.Features.Conversations.CreateConversation;
+using Mimir.Application.Features.CreateConversation;
 using Mimir.IntegrationTest.Helpers;
 using Refit;
 using RichardSzalay.MockHttp;

@@ -11,7 +11,7 @@ using Mimir.Api.Configurations;
 using Mimir.Api.Model.Mapping;
 using Mimir.Api.Security;
 using Mimir.Application.ChatGpt;
-using Mimir.Application.Features.Conversations.CreateConversation;
+using Mimir.Application.Features.CreateConversation;
 using Mimir.Infrastructure.Configurations;
 using Mimir.Infrastructure.Repositories;
 using Refit;

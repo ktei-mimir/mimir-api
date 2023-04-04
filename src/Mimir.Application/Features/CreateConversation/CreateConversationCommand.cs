@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Mimir.Application.Features.Conversations.CreateConversation;
+namespace Mimir.Application.Features.CreateConversation;
 
 public class CreateConversationCommand : IRequest<CreateConversationResponse>
 {

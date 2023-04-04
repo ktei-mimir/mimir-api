@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Mimir.Api.Model.Conversations;
-using Mimir.Application.Features.Conversations.CreateConversation;
+using Mimir.Application.Features.CreateConversation;
 
 namespace Mimir.Api.Model.Mapping;
 

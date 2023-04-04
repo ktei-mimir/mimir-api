@@ -1,7 +1,7 @@
 ﻿using FastEndpoints;
 using MediatR;
 using Mimir.Api.Model.Conversations;
-using Mimir.Application.Features.Conversations.CreateConversation;
+using Mimir.Application.Features.CreateConversation;
 using IMapper = AutoMapper.IMapper;
 
 namespace Mimir.Api.Endpoints.CreateConversation;

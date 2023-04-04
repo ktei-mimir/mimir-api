@@ -5,7 +5,7 @@ using Mimir.Domain.Repositories;
 using ChatGptMessage = Mimir.Application.ChatGpt.Message;
 using Message = Mimir.Domain.Models.Message;
 
-namespace Mimir.Application.Features.Conversations.CreateConversation;
+namespace Mimir.Application.Features.CreateConversation;
 
 public class CreateConversationCommandHandler : IRequestHandler<CreateConversationCommand, CreateConversationResponse>
 {
