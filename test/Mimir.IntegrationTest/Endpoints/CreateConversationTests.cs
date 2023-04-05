@@ -1,39 +1,22 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using AutoFixture;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Mimir.Api.Model.Conversations;
 using Mimir.Application.ChatGpt;
 using Mimir.Application.Features.CreateConversation;
-using Mimir.IntegrationTest.Helpers;
 using Refit;
 using RichardSzalay.MockHttp;
 
 namespace Mimir.IntegrationTest.Endpoints;
 
-public class CreateConversationTests : IClassFixture<WebApplicationFactory<Program>>
+public class CreateConversationTests : EndpointTestBase
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    
-    public CreateConversationTests(WebApplicationFactory<Program> factory)
+    public CreateConversationTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureTestServices(services =>
-            {
-                services.AddAuthentication(options =>
-                    {
-                        options.DefaultAuthenticateScheme = "TestScheme";
-                        options.DefaultChallengeScheme = "TestScheme";
-                    })
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", _ => { });
-            });
-        });
     }
 
     [Fact]
@@ -42,8 +25,8 @@ public class CreateConversationTests : IClassFixture<WebApplicationFactory<Progr
         var fixture = new Fixture();
         var completion = fixture.Create<Completion>();
         var chatCompletion = fixture.Create<ChatCompletion>();
-            
-        var client = _factory
+
+        var client = Factory
             .WithWebHostBuilder(builder =>
             {
                 builder.ConfigureTestServices(services =>
@@ -61,7 +44,7 @@ public class CreateConversationTests : IClassFixture<WebApplicationFactory<Progr
                 });
             })
             .CreateClient();
-        
+
         var response = await client.PostAsJsonAsync("/v1/conversations", new CreateConversationRequest
         {
             Message = "Hello"
@@ -71,5 +54,19 @@ public class CreateConversationTests : IClassFixture<WebApplicationFactory<Progr
         var actualResponse = await response.Content.ReadFromJsonAsync<CreateConversationResponse>();
         actualResponse.Should().NotBeNull();
         actualResponse!.Choices.Should().HaveCount(chatCompletion.Choices.Count);
+    }
+
+    [Fact]
+    public async Task Return_bad_request_given_invalid_request()
+    {
+        var client = Factory
+            .CreateClient();
+
+        var response = await client.PostAsJsonAsync("/v1/conversations", new CreateConversationRequest
+        {
+            Message = string.Empty
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 }

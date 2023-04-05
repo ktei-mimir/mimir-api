@@ -1,6 +1,7 @@
 ﻿using FastEndpoints;
 using MediatR;
 using Mimir.Api.Model.Conversations;
+using Mimir.Api.Security;
 using Mimir.Application.Features.CreateConversation;
 using IMapper = AutoMapper.IMapper;
 
@@ -20,13 +21,14 @@ public class CreateConversationEndpoint : Endpoint<CreateConversationRequest, Cr
     public override void Configure()
     {
         Post("/v1/conversations");
-        Policies("ChatGptUserOnly");
+        this.RequireChatGptUser();
     }
 
-    public override async Task HandleAsync(CreateConversationRequest request, CancellationToken cancellationToken)
+    public override async Task<CreateConversationResponse> ExecuteAsync(CreateConversationRequest request,
+        CancellationToken cancellationToken)
     {
         var command = _mapper.Map<CreateConversationCommand>(request);
         var response = await _sender.Send(command, cancellationToken);
-        await SendAsync(response, cancellation: cancellationToken);
+        return response;
     }
 }

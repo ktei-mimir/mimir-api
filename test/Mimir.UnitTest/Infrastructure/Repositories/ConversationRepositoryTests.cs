@@ -74,7 +74,7 @@ public class ConversationRepositoryTests
         if (latestConversation != null)
             timestampNow = Convert.ToInt64(latestConversation["GSI1SK"].S) + 1000;
         var conversations = Enumerable.Range(0, 3)
-            .Select(index => new Conversation(Guid.NewGuid().ToString(), fixture.Create<string>(),
+            .Select(_ => new Conversation(Guid.NewGuid().ToString(), fixture.Create<string>(),
                 timestampNow += 1000))
             .ToList();
         foreach (var conversation in conversations)
@@ -92,7 +92,7 @@ public class ConversationRepositoryTests
             });
         }
 
-        var actual = await _sut.List(limit: 3);
+        var actual = await _sut.ListAll(limit: 3);
 
         var sorted = conversations.OrderByDescending(x => x.CreatedAt).ToList();
         actual.Should().BeEquivalentTo(sorted, options => options.WithStrictOrdering());

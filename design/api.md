@@ -2,10 +2,11 @@
 
 ## Overview
 
-| Endpoint                                     | Request                                                 | Response                   |
-|----------------------------------------------|---------------------------------------------------------|----------------------------|
-| `POST /v1/conversations`                     | [CreateConversationRequest](#createconversationrequest) | CreateConversationResponse |
-| `GET /v1/conversations/{id:string}/messages` | N/A                                                     | [Message](#message)[]      |
+| Endpoint                                     | Request                                                 | Response                              |
+|----------------------------------------------|---------------------------------------------------------|---------------------------------------|
+| `POST /v1/conversations`                     | [CreateConversationRequest](#createconversationrequest) | CreateConversationResponse            |
+| `GET /v1/conversations`                      | N/A                                                     | [ConversationDto](#conversationdto)[] |
+| `GET /v1/conversations/{id:string}/messages` | N/A                                                     | [MessageDto](#messagedto)[]           |
 
 ## Types
 
@@ -31,7 +32,21 @@
 | FinishReason | string                |         |
 | Index        | int                   |         |
 
+### ConversationDto
+
+| Field | Type   | Comment |
+|-------|--------|---------|
+| Id    | string |         |
+| Title | string |         |
+
 ### Message
+
+| Field   | Type                | Comment |
+|---------|---------------------|---------|
+| Role    | 'user'\|'assistant' |         |
+| Content | string              |         |
+
+### MessageDto
 
 | Field   | Type                | Comment |
 |---------|---------------------|---------|

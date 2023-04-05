@@ -4,9 +4,43 @@ namespace Mimir.Domain.Models;
 
 public class Message : Entity
 {
+    public const int MaxContentLength = 1000;
     public string ConversationId { get; private set; }
-    public string Role { get; private set; }
-    public string Content { get; private set; }
+
+    private string _role;
+
+    public string Role
+    {
+        get => _role;
+        private set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new ArgumentException($"{nameof(Role)} cannot be empty"); 
+            }
+
+            _role = value;
+        }
+    }
+
+    private string _content;
+    public string Content
+    {
+        get => _content;
+        private set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new ArgumentException($"{nameof(Content)} cannot be empty");
+            }
+
+            if (value.Length > MaxContentLength)
+                throw new ArgumentOutOfRangeException(
+                    $"The length of {nameof(Content)} cannot exceed {MaxContentLength} characters");
+
+            _content = value;
+        }
+    }
     public long CreatedAt { get; private set; }
 
     public Message() : base(EntityTypes.Message)
