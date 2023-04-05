@@ -50,7 +50,7 @@ public class ConversationRepositoryTests
     private static ConversationRepository CreateSut()
     {
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
-        var sut = new ConversationRepository(dynamoDb, new DynamoDBContext(dynamoDb), Options.Create<DynamoDbOptions>(new DynamoDbOptions
+        var sut = new ConversationRepository(dynamoDb, new DynamoDBContext(dynamoDb), Options.Create(new DynamoDbOptions
         {
             TableName = DynamoDbUtils.TableName
         }));

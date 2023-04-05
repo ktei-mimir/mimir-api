@@ -35,13 +35,13 @@ public class MessageRepository : IMessageRepository
         }, cancellationToken);
     }
 
-    public async Task<List<Message>> ListByConversationId(string conversationId, int limit = 10,
+    public async Task<List<Message>> ListByConversationId(string conversationId, int limit = 20,
         CancellationToken cancellationToken = default)
     {
         var queryRequest = new QueryRequest
         {
             TableName = _options.TableName,
-            KeyConditionExpression = "PK = :pk and SK begins_with(:sk)",
+            KeyConditionExpression = "PK = :pk and begins_with(SK, :sk)",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>
             {
                 { ":pk", new AttributeValue($"CONVERSATION#{conversationId}") },
