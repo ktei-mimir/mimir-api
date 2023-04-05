@@ -15,7 +15,8 @@ public class MessageRepository : IMessageRepository
     private readonly IDynamoDBContext _dynamoDbContext;
     private readonly DynamoDbOptions _options;
 
-    public MessageRepository(IAmazonDynamoDB dynamoDb, IDynamoDBContext dynamoDbContext, IOptions<DynamoDbOptions> optionsAccessor)
+    public MessageRepository(IAmazonDynamoDB dynamoDb, IDynamoDBContext dynamoDbContext,
+        IOptions<DynamoDbOptions> optionsAccessor)
     {
         _dynamoDb = dynamoDb;
         _dynamoDbContext = dynamoDbContext;
@@ -40,10 +41,11 @@ public class MessageRepository : IMessageRepository
         var queryRequest = new QueryRequest
         {
             TableName = _options.TableName,
-            KeyConditionExpression = "PK = :pk",
+            KeyConditionExpression = "PK = :pk and SK begins_with(:sk)",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>
             {
-                { ":pk", new AttributeValue($"CONVERSATION#{conversationId}") }
+                { ":pk", new AttributeValue($"CONVERSATION#{conversationId}") },
+                { ":sk", new AttributeValue("MESSAGE#") }
             },
             Limit = limit
         };

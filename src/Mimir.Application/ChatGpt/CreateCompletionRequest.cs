@@ -4,7 +4,7 @@ namespace Mimir.Application.ChatGpt;
 
 public class CreateCompletionRequest
 {
-    public string Model { get; set; } = OpenApiModels.TextDavinci003;
+    public string Model { get; set; } = AIModels.TextDavinci003;
 
     public string Prompt { get; set; }
 
