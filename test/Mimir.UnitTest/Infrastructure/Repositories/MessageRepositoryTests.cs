@@ -1,4 +1,6 @@
-﻿using Amazon.DynamoDBv2.DataModel;
+﻿using System.Text.Json;
+using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using AutoFixture;
 using Microsoft.Extensions.Options;
@@ -45,20 +47,20 @@ public class MessageRepositoryTests
         var fixture = new Fixture();
         var conversation = new Conversation(conversationId, Guid.NewGuid().ToString(), DateTime.UtcNow);
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
+        var conversationItem = Document.FromJson(JsonSerializer.Serialize(conversation)).ToAttributeMap();
+        conversationItem["PK"] = new AttributeValue($"CONVERSATION#{conversation.Id}");
+        conversationItem["SK"] = new AttributeValue($"CONVERSATION#{conversation.CreatedAt}");
+        conversationItem["GSI1PK"] = new AttributeValue("CONVERSATION");
+        conversationItem["GSI1SK"] = new AttributeValue(conversation.CreatedAt.ToString());
         await dynamoDb.PutItemAsync(new PutItemRequest
         {
             TableName = DynamoDbUtils.TableName,
-            Item = new Dictionary<string, AttributeValue>
-            {
-                { "PK", new AttributeValue($"CONVERSATION#{conversation.Id}") },
-                { "SK", new AttributeValue($"CONVERSATION#{conversation.CreatedAt}") },
-                { "Title", new AttributeValue(conversation.Title) },
-                { "CreatedAt", new AttributeValue { N = conversation.CreatedAt.ToString() } }
-            }
+            Item = conversationItem
         });
+        var utcNow = DateTime.UtcNow;
         var messages = Enumerable.Range(0, 3)
             .Select(index =>
-                new Message(conversationId, "user", fixture.Create<string>(), DateTime.UtcNow.AddMinutes(index)))
+                new Message(conversationId, "user", fixture.Create<string>(), utcNow.AddMinutes(index)))
             .ToList();
         foreach (var message in messages)
         {
@@ -71,7 +73,7 @@ public class MessageRepositoryTests
         conversationMessages.Select(x => x.CreatedAt).Should().BeInAscendingOrder();
     }
 
-    private MessageRepository CreateSut()
+    private static MessageRepository CreateSut()
     {
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
         var sut = new MessageRepository(dynamoDb, new DynamoDBContext(dynamoDb), Options.Create(new DynamoDbOptions

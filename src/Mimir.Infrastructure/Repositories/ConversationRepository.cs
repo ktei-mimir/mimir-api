@@ -1,5 +1,6 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Options;
 using Mimir.Domain.Models;
@@ -22,11 +23,14 @@ public class ConversationRepository : IConversationRepository
         _options = optionsAccessor.Value;
     }
 
-    public async Task Create(Conversation conversation, Message firstMessage, CancellationToken cancellationToken = default)
+    public async Task Create(Conversation conversation, Message firstMessage,
+        CancellationToken cancellationToken = default)
     {
         var conversationDocument = _dynamoDbContext.ToDocument(conversation);
         conversationDocument["PK"] = $"CONVERSATION#{conversation.Id}";
         conversationDocument["SK"] = $"CONVERSATION#{conversation.CreatedAt}";
+        conversationDocument["GSI1PK"] = "CONVERSATION";
+        conversationDocument["GSI1SK"] = conversation.CreatedAt.ToString();
         var messageDocument = _dynamoDbContext.ToDocument(firstMessage);
         messageDocument["PK"] = $"CONVERSATION#{conversation.Id}";
         messageDocument["SK"] = $"MESSAGE#{firstMessage.CreatedAt}";
@@ -54,8 +58,24 @@ public class ConversationRepository : IConversationRepository
         }, cancellationToken);
     }
 
-    public Task<Conversation?> GetById(string id, CancellationToken cancellationToken = default)
+    public async Task<List<Conversation>> List(int limit = 50, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var request = new QueryRequest
+        {
+            TableName = _options.TableName,
+            IndexName = "GSI1",
+            KeyConditionExpression = "GSI1PK = :pk",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":pk", new AttributeValue("CONVERSATION") }
+            },
+            Limit = limit,
+            ScanIndexForward = false // sort in descending order
+        };
+
+        var response = await _dynamoDb.QueryAsync(request, cancellationToken);
+
+        return response.Items
+            .Select(item => _dynamoDbContext.FromDocument<Conversation>(Document.FromAttributeMap(item))).ToList();
     }
 }

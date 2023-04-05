@@ -23,4 +23,9 @@ public class Conversation : Entity
         Title = title;
         CreatedAt = createdAt;
     }
+    
+    public override string ToString()
+    {
+        return $"Conversation: {Id} - {Title}";
+    }
 }

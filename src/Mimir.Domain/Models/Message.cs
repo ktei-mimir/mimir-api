@@ -26,4 +26,6 @@ public class Message : Entity
         : this(conversationId, role, content, createdAt.ToUnixTimeStamp())
     {
     }
+
+    public override string ToString() => $"Message: {ConversationId} - {Role}";
 }

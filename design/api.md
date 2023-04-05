@@ -2,9 +2,10 @@
 
 ## Overview
 
-| Endpoint                 | Request                                                 | Response                   |
-|--------------------------|---------------------------------------------------------|----------------------------|
-| `POST /v1/conversations` | [CreateConversationRequest](#createconversationrequest) | CreateConversationResponse |
+| Endpoint                                     | Request                                                 | Response                   |
+|----------------------------------------------|---------------------------------------------------------|----------------------------|
+| `POST /v1/conversations`                     | [CreateConversationRequest](#createconversationrequest) | CreateConversationResponse |
+| `GET /v1/conversations/{id:string}/messages` | N/A                                                     | [Message](#message)[]      |
 
 ## Types
 

@@ -2,8 +2,10 @@
 using System.Text.Json;
 using AutoFixture;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Mimir.Api.Model.Conversations;
 using Mimir.Application.ChatGpt;
