@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using JetBrains.Annotations;
+using MediatR;
 using Mimir.Application.ChatGpt;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
@@ -7,6 +8,7 @@ using Message = Mimir.Domain.Models.Message;
 
 namespace Mimir.Application.Features.CreateConversation;
 
+[UsedImplicitly]
 public class CreateConversationCommandHandler : IRequestHandler<CreateConversationCommand, CreateConversationResponse>
 {
     private readonly IChatGptApi _chatGptApi;

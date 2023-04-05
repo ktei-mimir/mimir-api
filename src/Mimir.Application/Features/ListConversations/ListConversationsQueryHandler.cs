@@ -1,10 +1,12 @@
-﻿using MediatR;
+﻿using JetBrains.Annotations;
+using MediatR;
 using Mimir.Application.Configurations;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 
 namespace Mimir.Application.Features.ListConversations;
 
+[UsedImplicitly]
 public class ListConversationsQueryHandler : IRequestHandler<ListConversationsQuery, List<Conversation>>
 {
     private readonly IConversationRepository _conversationRepository;

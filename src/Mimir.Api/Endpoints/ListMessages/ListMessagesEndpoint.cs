@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using JetBrains.Annotations;
 using MediatR;
 using Mimir.Api.Model.Messages;
 using Mimir.Api.Security;
@@ -7,6 +8,7 @@ using IMapper = AutoMapper.IMapper;
 
 namespace Mimir.Api.Endpoints.ListMessages;
 
+[PublicAPI]
 public class ListMessagesEndpoint : EndpointWithoutRequest<MessageDto[]>
 {
     private readonly ISender _sender;

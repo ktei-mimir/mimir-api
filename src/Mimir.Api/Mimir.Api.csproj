@@ -22,6 +22,7 @@
     <PackageReference Include="FastEndpoints" />
     <PackageReference Include="FastEndpoints.Swagger" />
     <PackageReference Include="FluentValidation" />
+    <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
     <PackageReference Include="Refit.HttpClientFactory" />
