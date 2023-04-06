@@ -56,7 +56,7 @@ public class CreateMessageTests : EndpointTestBase
         response.EnsureSuccessStatusCode();
         var actualResponse = await response.Content.ReadFromJsonAsync<MessageDto>();
         actualResponse.Should().NotBeNull();
-        actualResponse!.Content.Should().Be(chatCompletion.Choices.First().GptMessage.Content);
+        actualResponse!.Content.Should().Be(chatCompletion.Choices.First().Message.Content);
         using (var scope = Factory.Services.CreateScope())
         {
             var messageRepository= scope.ServiceProvider.GetRequiredService<IMessageRepository>();

@@ -42,7 +42,7 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
         await _messageRepository.Create(new[]
         {
             new Message(newConversationId, Roles.Assistant,
-                chatCompletion.Choices.First().GptMessage.Content, chatCompletion.Created)
+                chatCompletion.Choices.First().Message.Content, chatCompletion.Created)
         }, cancellationToken);
         
         var response = new CreateConversationResponse

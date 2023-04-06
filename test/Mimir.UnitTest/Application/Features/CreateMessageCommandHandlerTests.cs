@@ -32,8 +32,8 @@ public class CreateMessageCommandHandlerTests
             Content = x.Content
         }).ToList();
         var chatCompletion = new Fixture().Create<ChatCompletion>();
-        var assistantMessage = new Message(command.ConversationId, chatCompletion.Choices.First().GptMessage.Role,
-            chatCompletion.Choices.First().GptMessage.Content, chatCompletion.Created);
+        var assistantMessage = new Message(command.ConversationId, chatCompletion.Choices.First().Message.Role,
+            chatCompletion.Choices.First().Message.Content, chatCompletion.Created);
 
         messageRepositoryMock
             .Setup(x => x.ListByConversationId(command.ConversationId, Limits.MaxMessagesPerRequest, default))
