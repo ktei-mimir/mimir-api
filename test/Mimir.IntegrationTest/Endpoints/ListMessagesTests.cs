@@ -6,7 +6,6 @@ using Mimir.Api.Model.Messages;
 using Mimir.Application.ChatGpt;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
-using Message = Mimir.Domain.Models.Message;
 
 namespace Mimir.IntegrationTest.Endpoints;
 
@@ -28,11 +27,12 @@ public class ListMessagesTests : EndpointTestBase
             await conversationRepository.Create(new Conversation(conversationId, fixture.Create<string>(),
                 DateTime.UtcNow));
             var utcNow = DateTime.UtcNow;
-            foreach (var _ in Enumerable.Range(0, 10))
-            {
-                await messageRepository.Create(new Message(conversationId, Roles.User, fixture.Create<string>(),
-                    utcNow = utcNow.AddMinutes(1)));
-            }
+            var messages = Enumerable.Range(0, 30)
+                .Select(_ => new Message(conversationId, Roles.User, fixture.Create<string>(),
+                    utcNow = utcNow.AddMinutes(1)))
+                .ToList();
+
+            await messageRepository.Create(messages);
         }
 
         var client = Factory
@@ -40,6 +40,6 @@ public class ListMessagesTests : EndpointTestBase
         var response = await client.GetFromJsonAsync<MessageDto[]>($"/v1/conversations/{conversationId}/messages");
 
         response.Should().NotBeNull();
-        response!.Should().HaveCount(10);
+        response!.Should().HaveCount(30);
     }
 }

@@ -3,8 +3,6 @@ using MediatR;
 using Mimir.Application.ChatGpt;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
-using ChatGptMessage = Mimir.Application.ChatGpt.Message;
-using Message = Mimir.Domain.Models.Message;
 
 namespace Mimir.Application.Features.CreateConversation;
 
@@ -31,7 +29,7 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
         {
             Prompt = CommandBuilder.Summarize(command.Message),
             MaxTokens = 20
-        });
+        }, cancellationToken);
         var conversationTitle = completion.Choices.First().Text;
         await _conversationRepository.Create(new Conversation(newConversationId, conversationTitle, DateTime.UtcNow),
             new Message(newConversationId, Roles.User, command.Message, DateTime.UtcNow),
@@ -39,14 +37,18 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
         
         var chatCompletion = await _chatGptApi.CreateChatCompletion(new CreateChatCompletionRequest
         {
-            Messages = new List<ChatGptMessage> { new() { Role = Roles.User, Content = command.Message } }
-        });
-        await _messageRepository.Create(new Message(newConversationId, Roles.Assistant, 
-            chatCompletion.Choices.First().Message.Content, chatCompletion.Created), cancellationToken);
+            Messages = new List<GptMessage> { new() { Role = Roles.User, Content = command.Message } }
+        }, cancellationToken);
+        await _messageRepository.Create(new[]
+        {
+            new Message(newConversationId, Roles.Assistant,
+                chatCompletion.Choices.First().GptMessage.Content, chatCompletion.Created)
+        }, cancellationToken);
         
         var response = new CreateConversationResponse
         {
             Id = newConversationId,
+            Title = conversationTitle,
             Choices = chatCompletion.Choices.ToArray(),
             TotalTokens =  chatCompletion.Usage.Add(chatCompletion.Usage).TotalTokens
         };

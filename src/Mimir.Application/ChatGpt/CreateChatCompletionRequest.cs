@@ -3,5 +3,5 @@
 public class CreateChatCompletionRequest
 {
     public string Model { get; set; } = AIModels.Gpt3Turbo;
-    public List<Message> Messages { get; set; } = new();
+    public List<GptMessage> Messages { get; set; } = new();
 }

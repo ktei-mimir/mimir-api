@@ -25,7 +25,7 @@ public class MessageRepositoryTests
     {
         var message = new Message(Guid.NewGuid().ToString(), "user", "Hello, world!", DateTime.UtcNow);
 
-        await _sut.Create(message);
+        await _sut.Create(new[] { message });
 
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
         var savedMessage = await dynamoDb.GetItemAsync(new GetItemRequest
@@ -62,12 +62,9 @@ public class MessageRepositoryTests
             .Select(index =>
                 new Message(conversationId, "user", fixture.Create<string>(), utcNow.AddMinutes(index)))
             .ToList();
-        foreach (var message in messages)
-        {
-            await _sut.Create(message);
-        }
+        await _sut.Create(messages);
 
-        var conversationMessages = await _sut.ListByConversationId(conversationId);
+        var conversationMessages = await _sut.ListByConversationId(conversationId, 3);
 
         conversationMessages.Should().HaveCount(3);
         conversationMessages.Select(x => x.CreatedAt).Should().BeInAscendingOrder();

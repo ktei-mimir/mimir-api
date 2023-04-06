@@ -3,6 +3,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Options;
+using Mimir.Application.Helpers;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 using Mimir.Infrastructure.Configurations;
@@ -14,6 +15,7 @@ public class MessageRepository : IMessageRepository
     private readonly IAmazonDynamoDB _dynamoDb;
     private readonly IDynamoDBContext _dynamoDbContext;
     private readonly DynamoDbOptions _options;
+    private const int MaxBatchSize = 25;
 
     public MessageRepository(IAmazonDynamoDB dynamoDb, IDynamoDBContext dynamoDbContext,
         IOptions<DynamoDbOptions> optionsAccessor)
@@ -23,17 +25,33 @@ public class MessageRepository : IMessageRepository
         _options = optionsAccessor.Value;
     }
 
-    public async Task Create(Message message, CancellationToken cancellationToken = default)
+    public async Task Create(IEnumerable<Message> messages, CancellationToken cancellationToken = default)
     {
-        var messageDocument = _dynamoDbContext.ToDocument(message);
-        messageDocument["PK"] = $"CONVERSATION#{message.ConversationId}";
-        messageDocument["SK"] = $"MESSAGE#{message.CreatedAt}";
-        await _dynamoDb.PutItemAsync(new PutItemRequest
+        var requests = messages.Select(message =>
         {
-            Item = messageDocument.ToAttributeMap(),
-            TableName = _options.TableName
-        }, cancellationToken);
+            var messageDocument = _dynamoDbContext.ToDocument(message);
+            messageDocument["PK"] = $"CONVERSATION#{message.ConversationId}";
+            messageDocument["SK"] = $"MESSAGE#{message.CreatedAt}";
+            return new Put
+            {
+                Item = messageDocument.ToAttributeMap(),
+                TableName = _options.TableName
+            };
+        });
+
+        var chunks = requests.ChunkBy(MaxBatchSize);
+
+        foreach (var chunk in chunks)
+        {
+            var transactWriteRequest = new TransactWriteItemsRequest
+            {
+                TransactItems = chunk.Select(request => new TransactWriteItem { Put = request }).ToList()
+            };
+
+            await _dynamoDb.TransactWriteItemsAsync(transactWriteRequest, cancellationToken);
+        }
     }
+
 
     public async Task<List<Message>> ListByConversationId(string conversationId, int limit = 20,
         CancellationToken cancellationToken = default)
@@ -50,9 +68,16 @@ public class MessageRepository : IMessageRepository
             Limit = limit
         };
 
-        var response = await _dynamoDb.QueryAsync(queryRequest, cancellationToken);
+        var messages = new List<Message>();
+        QueryResponse response;
+        do
+        {
+            response = await _dynamoDb.QueryAsync(queryRequest, cancellationToken);
+            messages.AddRange(response.Items.Select(x =>
+                _dynamoDbContext.FromDocument<Message>(Document.FromAttributeMap(x))));
+            queryRequest.ExclusiveStartKey = response.LastEvaluatedKey;
+        } while (response.LastEvaluatedKey != null && messages.Count < limit);
 
-        return response.Items.Select(x => _dynamoDbContext.FromDocument<Message>(Document.FromAttributeMap(x)))
-            .ToList();
+        return messages.Take(limit).ToList();
     }
 }
