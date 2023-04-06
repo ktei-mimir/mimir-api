@@ -13,7 +13,7 @@ namespace Mimir.UnitTest.Application.Features;
 public class CreateMessageCommandHandlerTests
 {
     [Theory, MoqAutoData]
-    public async Task Handle_ShouldCreateMessage(
+    public async Task Add_a_message_to_a_conversation(
         [Frozen] Mock<IMessageRepository> messageRepositoryMock,
         [Frozen] Mock<IChatGptApi> chatGptApiMock,
         CreateMessageCommandHandler sut)
@@ -52,25 +52,7 @@ public class CreateMessageCommandHandlerTests
         chatGptApiMock.Verify(
             x => x.CreateChatCompletion(
                 It.Is<CreateChatCompletionRequest>(r =>
-                    r.Messages.SequenceEqual(gptMessages, new GptMessageEqualityComparer())), default),
+                    r.Messages.SequenceEqual(gptMessages)), default),
             Times.Once);
-    }
-
-    private class GptMessageEqualityComparer : IEqualityComparer<GptMessage>
-    {
-        public bool Equals(GptMessage? x, GptMessage? y)
-        {
-            if (x == null || y == null)
-            {
-                return false;
-            }
-        
-            return x.Role == y.Role && x.Content == y.Content;
-        }
-
-        public int GetHashCode(GptMessage obj)
-        {
-            return obj.Role.GetHashCode() ^ obj.Content.GetHashCode();
-        }
     }
 }

@@ -2,10 +2,7 @@
 
 namespace Mimir.Application.ChatGpt;
 
-public class GptMessage
+public readonly record struct GptMessage(string Role, string Content)
 {
-    public string Role { get; set; } = string.Empty;
-    public string Content { get; set; } = string.Empty;
-
     public override string ToString() => Content.TakeMax(10);
 }
