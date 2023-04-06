@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using MediatR;
 using Mimir.Api.Model.Messages;
 using Mimir.Api.Security;
+using Mimir.Application.Features.CreateMessage;
 using IMapper = AutoMapper.IMapper;
 
 namespace Mimir.Api.Endpoints.CreateMessage;
@@ -27,7 +28,12 @@ public class CreateMessageEndpoint : Endpoint<CreateMessageRequest, MessageDto>
 
     public override async Task<MessageDto> ExecuteAsync(CreateMessageRequest request, CancellationToken ct)
     {
-        var message = await _sender.Send(request, ct);
+        var conversationId = Route<string>("conversationId")!;
+        var command = new CreateMessageCommand(conversationId)
+        {
+            Content = request.Content
+        };
+        var message = await _sender.Send(command, ct);
         var response = _mapper.Map<MessageDto>(message);
         return response;
     }

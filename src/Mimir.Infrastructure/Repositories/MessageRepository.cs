@@ -76,7 +76,7 @@ public class MessageRepository : IMessageRepository
             messages.AddRange(response.Items.Select(x =>
                 _dynamoDbContext.FromDocument<Message>(Document.FromAttributeMap(x))));
             queryRequest.ExclusiveStartKey = response.LastEvaluatedKey;
-        } while (response.LastEvaluatedKey != null && messages.Count < limit);
+        } while (response.LastEvaluatedKey.Any() && messages.Count < limit);
 
         return messages.Take(limit).ToList();
     }
