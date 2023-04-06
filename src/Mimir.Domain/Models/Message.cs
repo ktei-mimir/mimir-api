@@ -61,5 +61,5 @@ public class Message : Entity
     {
     }
 
-    public override string ToString() => $"Message: {ConversationId} - {Role}";
+    public override string ToString() => $"Message: {Role} - {Content.TakeMax(10)}";
 }
