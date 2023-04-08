@@ -4,10 +4,10 @@
 
 ### Primary key
 
-| PK                            | SK                       |
-|-------------------------------|--------------------------|
-| CONVERSATION#[ConversationId] | CONVERSATION#[CreatedAt] |
-| CONVERSATION#[ConversationId] | MESSAGE#[CreatedAt]      |
+| PK                            | SK                         |
+|-------------------------------|----------------------------|
+| CONVERSATION#[ConversationId] | CONVERSATION#[CreatedAt]   |
+| CONVERSATION#[ConversationId] | MESSAGE#[CreatedAt]#[Role] |
 
 | GSI1PK                  | GSI1SK      |
 |-------------------------|-------------|

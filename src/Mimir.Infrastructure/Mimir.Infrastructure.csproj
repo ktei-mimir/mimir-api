@@ -3,8 +3,10 @@
     <ProjectReference Include="..\Mimir.Application\Mimir.Application.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AutoFixture" />
     <PackageReference Include="AWSSDK.DynamoDBv2" />
     <PackageReference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="RichardSzalay.MockHttp" />
     <PackageReference Include="System.ComponentModel.Annotations" />
   </ItemGroup>
 </Project>

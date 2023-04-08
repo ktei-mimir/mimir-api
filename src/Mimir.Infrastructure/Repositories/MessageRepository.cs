@@ -31,7 +31,7 @@ public class MessageRepository : IMessageRepository
         {
             var messageDocument = _dynamoDbContext.ToDocument(message);
             messageDocument["PK"] = $"CONVERSATION#{message.ConversationId}";
-            messageDocument["SK"] = $"MESSAGE#{message.CreatedAt}";
+            messageDocument["SK"] = $"MESSAGE#{message.CreatedAt}#{message.Role}";
             return new Put
             {
                 Item = messageDocument.ToAttributeMap(),

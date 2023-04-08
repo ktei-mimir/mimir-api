@@ -37,9 +37,10 @@ public class ListMessagesTests : EndpointTestBase
 
         var client = Factory
             .CreateClient();
-        var response = await client.GetFromJsonAsync<MessageDto[]>($"/v1/conversations/{conversationId}/messages");
+        var response =
+            await client.GetFromJsonAsync<ListMessagesResponse>($"/v1/conversations/{conversationId}/messages");
 
         response.Should().NotBeNull();
-        response!.Should().HaveCount(30);
+        response!.Items.Should().HaveCount(30);
     }
 }

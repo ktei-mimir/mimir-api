@@ -45,7 +45,7 @@ public class ConversationRepositoryTests
             Key = new Dictionary<string, AttributeValue>
             {
                 {"PK", new AttributeValue($"CONVERSATION#{conversation.Id}")},
-                {"SK", new AttributeValue($"MESSAGE#{firstMessage.CreatedAt}")}
+                {"SK", new AttributeValue($"MESSAGE#{firstMessage.CreatedAt}#{firstMessage.Role}")}
             }
         });
         savedConversation.Item.Should().NotBeNull();

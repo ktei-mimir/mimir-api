@@ -46,7 +46,7 @@ public class ConversationRepository : IConversationRepository
         {
             var messageDocument = _dynamoDbContext.ToDocument(firstMessage);
             messageDocument["PK"] = $"CONVERSATION#{conversation.Id}";
-            messageDocument["SK"] = $"MESSAGE#{firstMessage.CreatedAt}";
+            messageDocument["SK"] = $"MESSAGE#{firstMessage.CreatedAt}#{firstMessage.Role}";
             transactItems.Add(new TransactWriteItem
             {
                 Put = new Put

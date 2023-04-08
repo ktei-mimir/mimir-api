@@ -9,7 +9,7 @@ using IMapper = AutoMapper.IMapper;
 namespace Mimir.Api.Endpoints.ListConversations;
 
 [PublicAPI]
-public class ListConversationsEndpoint : EndpointWithoutRequest<ConversationDto[]>
+public class ListConversationsEndpoint : EndpointWithoutRequest<ListConversationsResponse>
 {
     private readonly ISender _sender;
     private readonly IMapper _mapper;
@@ -26,11 +26,11 @@ public class ListConversationsEndpoint : EndpointWithoutRequest<ConversationDto[
         this.RequireChatGptUser();
     }
 
-    public override async Task<ConversationDto[]> ExecuteAsync(CancellationToken ct)
+    public override async Task<ListConversationsResponse> ExecuteAsync(CancellationToken ct)
     {
         var query = new ListConversationsQuery();
         var conversations = await _sender.Send(query, ct);
-        var response = _mapper.Map<ConversationDto[]>(conversations);
-        return response;
+        var items = _mapper.Map<ConversationDto[]>(conversations);
+        return new ListConversationsResponse { Items = items };
     }
 }

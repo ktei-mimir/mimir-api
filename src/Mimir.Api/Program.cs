@@ -5,6 +5,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.Runtime;
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Mimir.Api.Configurations;
@@ -13,6 +14,7 @@ using Mimir.Api.Security;
 using Mimir.Application.ChatGpt;
 using Mimir.Application.Features.CreateConversation;
 using Mimir.Infrastructure.Configurations;
+using Mimir.Infrastructure.HttpMocks;
 using Mimir.Infrastructure.Repositories;
 using Refit;
 using IMapper = AutoMapper.IMapper;
@@ -82,7 +84,7 @@ builder.Services.Scan(s => s
 // 3rd party API
 var chatGptOptions = new ChatGptOptions();
 builder.Configuration.Bind("ChatGpt", chatGptOptions);
-builder.Services
+var httpClientBuilder = builder.Services
     .AddRefitClient<IChatGptApi>()
     .ConfigureHttpClient(c =>
     {
@@ -94,6 +96,10 @@ builder.Services
         c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", chatGptOptions.ApiKey);
         c.BaseAddress = new Uri(chatGptOptions.ApiDomain);
     });
+if (builder.Configuration.GetValue<bool>("ChatGpt:UseMock"))
+{
+    httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() => new ChatGptApiHandlerMock());
+}
 
 // add MediatR
 builder.Services.AddMediatR(cfg =>
@@ -107,12 +113,24 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 // add AWS Lambda support.
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 
+// CORS
+builder.Services.AddCors(cors =>
+{
+    cors.AddPolicy("AllowLocal", policyBuilder =>
+    {
+        policyBuilder.WithOrigins("http://localhost:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 // kestrel configs
 builder.WebHost.UseUrls("http://*:5000");
 
 var app = builder.Build();
 app.MapHealthChecks("/healthy");
 
+app.UseCors("AllowLocal");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseFastEndpoints();
@@ -147,6 +165,7 @@ mapper.ConfigurationProvider.AssertConfigurationIsValid();
 await app.RunAsync();
 
 // for integration test
+[UsedImplicitly]
 public partial class Program
 {
 }

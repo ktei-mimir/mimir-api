@@ -33,9 +33,9 @@ public class ListConversationsTests : EndpointTestBase
 
         var client = Factory
             .CreateClient();
-        var response = await client.GetFromJsonAsync<ConversationDto[]>("/v1/conversations");
+        var response = await client.GetFromJsonAsync<ListConversationsResponse>("/v1/conversations");
 
         response.Should().NotBeNull();
-        response.Should().HaveCountGreaterOrEqualTo(conversations.Length);
+        response!.Items.Should().HaveCountGreaterOrEqualTo(conversations.Length);
     }
 }
