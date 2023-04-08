@@ -44,7 +44,7 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
         // pick the first choice
         var firstChoice = chatCompletion.Choices.First();
         var assistantMessage = new Message(command.ConversationId, firstChoice.Message.Role,
-            firstChoice.Message.Content, chatCompletion.Created);
+            firstChoice.Message.Content, DateTime.UtcNow);
         
         // save both user message and assistant message
         await _messageRepository.Create(new[] { userMessage, assistantMessage }, cancellationToken);

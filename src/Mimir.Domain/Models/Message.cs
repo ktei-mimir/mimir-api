@@ -57,7 +57,7 @@ public class Message : Entity
     }
 
     public Message(string conversationId, string role, string content, DateTime createdAt)
-        : this(conversationId, role, content, createdAt.ToUnixTimeStamp())
+        : this(conversationId, role, content, createdAt.Ticks)
     {
     }
 
