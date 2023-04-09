@@ -13,10 +13,13 @@ using Mimir.Api.Security;
 using Mimir.Application.Features.CreateConversation;
 using Mimir.Application.Interfaces;
 using Mimir.Application.OpenAI;
+using Mimir.Application.RealTime;
+using Mimir.Application.Security;
 using Mimir.Infrastructure.Configurations;
 using Mimir.Infrastructure.Impl;
 using Mimir.Infrastructure.OpenAI;
 using Mimir.Infrastructure.Repositories;
+using OpenAI.GPT3.Extensions;
 using IMapper = AutoMapper.IMapper;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,6 +46,24 @@ builder.Services.AddAuthentication(options =>
         builder.Configuration.Bind("IdP", identityProviderOptions);
         options.Authority = identityProviderOptions.Authority;
         options.Audience = identityProviderOptions.Audience;
+        
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+
+                // If the request is for our hub...
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs/conversation"))
+                {
+                    // Read the token out of the query string
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -89,6 +110,10 @@ builder.Services.AddOptions<OpenAIOptions>()
     .Bind(builder.Configuration.GetSection(OpenAIOptions.Key))
     .ValidateDataAnnotations()
     .ValidateOnStart();
+builder.Services.AddOpenAIService(settings =>
+{
+    settings.ApiKey = builder.Configuration[$"{OpenAIOptions.Key}:ApiKey"];
+});
 builder.Services.AddScoped<IChatGptApi, ChatGptApi>();
 
 // add MediatR
@@ -107,9 +132,17 @@ builder.Services.AddCors(cors =>
     {
         policyBuilder.WithOrigins("http://localhost:3000")
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
+
+// SignalR registration
+builder.Services.AddSignalR();
+
+// HTTP Context registration
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserIdentityProvider, HttpUserIdentityProvider>();
 
 // kestrel configs
 builder.WebHost.UseUrls("http://*:5000");
@@ -118,6 +151,7 @@ var app = builder.Build();
 app.MapHealthChecks("/healthy");
 
 app.UseCors("AllowLocal");
+app.MapHub<ConversationHub>("/hubs/conversation");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseFastEndpoints();

@@ -26,7 +26,8 @@ public class CreateMessageCommandHandlerTests
         var userMessage = new Message(command.ConversationId, command.Role, command.Content, DateTime.UtcNow);
         var utcNow = DateTime.UtcNow;
         var historyMessages = Enumerable.Range(0, 2).Select(x =>
-                new Message(command.ConversationId, fixture.Create<string>(), fixture.Create<string>(), utcNow = utcNow.AddMinutes(2)))
+                new Message(command.ConversationId, fixture.Create<string>(), fixture.Create<string>(),
+                    utcNow = utcNow.AddMinutes(2)))
             .ToList();
         var gptMessages = historyMessages.Concat(new[] { userMessage }).Select(x => new GptMessage
         {
@@ -40,11 +41,12 @@ public class CreateMessageCommandHandlerTests
         messageRepositoryMock
             .Setup(x => x.ListByConversationId(command.ConversationId, Limits.MaxMessagesPerRequest, default))
             .ReturnsAsync(historyMessages);
-        
+
         dateTimeMock.Setup(x => x.UtcNow()).Returns(utcNow);
 
         chatGptApiMock
-            .Setup(x => x.CreateChatCompletion(It.IsAny<CreateChatCompletionRequest>(), default))
+            .Setup(x => x.CreateChatCompletion(It.IsAny<CreateChatCompletionRequest>(), It.IsAny<Action<string>?>(),
+                default))
             .ReturnsAsync(chatCompletion);
 
         // Act
@@ -56,7 +58,7 @@ public class CreateMessageCommandHandlerTests
         chatGptApiMock.Verify(
             x => x.CreateChatCompletion(
                 It.Is<CreateChatCompletionRequest>(r =>
-                    r.Messages.SequenceEqual(gptMessages)), default),
+                    r.Messages.SequenceEqual(gptMessages)), It.IsAny<Action<string>?>(), default),
             Times.Once);
     }
 }

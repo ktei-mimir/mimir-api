@@ -1,8 +1,11 @@
 ﻿using JetBrains.Annotations;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
 using Mimir.Application.Configurations;
 using Mimir.Application.Interfaces;
 using Mimir.Application.OpenAI;
+using Mimir.Application.RealTime;
+using Mimir.Application.Security;
 using Mimir.Domain.Exceptions;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
@@ -15,12 +18,17 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
     private readonly IMessageRepository _messageRepository;
     private readonly IChatGptApi _chatGptApi;
     private readonly IDateTime _dateTime;
+    private readonly IHubContext<ConversationHub> _hubContext;
+    private readonly IUserIdentityProvider _userIdentityProvider;
 
-    public CreateMessageCommandHandler(IMessageRepository messageRepository, IChatGptApi chatGptApi, IDateTime dateTime)
+    public CreateMessageCommandHandler(IMessageRepository messageRepository, IChatGptApi chatGptApi, IDateTime dateTime,
+        IHubContext<ConversationHub> hubContext, IUserIdentityProvider userIdentityProvider)
     {
         _messageRepository = messageRepository;
         _chatGptApi = chatGptApi;
         _dateTime = dateTime;
+        _hubContext = hubContext;
+        _userIdentityProvider = userIdentityProvider;
     }
 
     public async Task<Message> Handle(CreateMessageCommand command, CancellationToken cancellationToken)
@@ -30,6 +38,8 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
         var userMessage = new Message(command.ConversationId, command.Role, command.Content, _dateTime.UtcNow());
         
         // pass the history messages + user message to the GPT
+        var username = _userIdentityProvider.GetUsername();
+        var hubUser = _hubContext.Clients.User(username);
         var chatCompletion = await _chatGptApi.CreateChatCompletion(new CreateChatCompletionRequest
         {
             Messages = historyMessages.Concat(new[] { userMessage }).Select(x => new GptMessage
@@ -37,7 +47,12 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
                 Role = x.Role,
                 Content = x.Content
             }).ToList()
-        }, cancellationToken);
+        }, (messageContent) => hubUser.SendAsync("ReceiveMessage", new
+        {
+            command.ConversationId,
+            Role = Roles.Assistant,
+            Content = messageContent
+        }, cancellationToken), cancellationToken);
         
         // there should be at least one choice
         if (!chatCompletion.Choices.Any())

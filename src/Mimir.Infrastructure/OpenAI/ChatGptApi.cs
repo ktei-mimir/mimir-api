@@ -1,10 +1,15 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Text;
+using Microsoft.Extensions.Options;
 using Mimir.Application.OpenAI;
 using Mimir.Infrastructure.Configurations;
 using OpenAI_API;
 using OpenAI_API.Chat;
 using OpenAI_API.Completions;
 using OpenAI_API.Models;
+using OpenAI.GPT3.Interfaces;
+using OpenAI.GPT3.ObjectModels.RequestModels;
+using OpenAI.GPT3.ObjectModels.SharedModels;
+using ChatMessage = OpenAI.GPT3.ObjectModels.RequestModels.ChatMessage;
 using Usage = Mimir.Application.OpenAI.Usage;
 
 namespace Mimir.Infrastructure.OpenAI;
@@ -12,13 +17,17 @@ namespace Mimir.Infrastructure.OpenAI;
 public class ChatGptApi : IChatGptApi
 {
     private readonly OpenAIAPI _api;
+    private readonly IOpenAIService _openAIService;
 
-    public ChatGptApi(IOptions<OpenAIOptions> optionsAccessor)
+    public ChatGptApi(IOptions<OpenAIOptions> optionsAccessor, IOpenAIService openAIService)
     {
+        _openAIService = openAIService;
         _api = new OpenAIAPI(optionsAccessor.Value.ApiKey);
     }
 
-    public async Task<ChatCompletion> CreateChatCompletion(CreateChatCompletionRequest request, CancellationToken cancellationToken = default)
+    public async Task<ChatCompletion> CreateChatCompletion(CreateChatCompletionRequest request, 
+        Action<string>? resultHandler = null,
+        CancellationToken cancellationToken = default)
     {
         var chat = _api.Chat.CreateConversation();
         foreach (var message in request.Messages)
@@ -36,23 +45,64 @@ public class ChatGptApi : IChatGptApi
             }
         }
 
-        await chat.GetResponseFromChatbotAsync();
+        // var completionResult = _openAIService.ChatCompletion.CreateCompletionAsStream(new ChatCompletionCreateRequest
+        // {
+        //     Model = "gpt-3.5-turbo",
+        //     
+        //     Messages = request.Messages.Select(m => m.Role switch
+        //     {
+        //         Roles.User => ChatMessage.FromUser(m.Content),
+        //         Roles.Assistant => ChatMessage.FromAssistant(m.Content),
+        //         _ => throw new NotSupportedException($"Role {m.Role} is not supported")
+        //     }).ToList()
+        // }, cancellationToken: cancellationToken);
+
+        // await foreach (var completion in completionResult.WithCancellation(cancellationToken))
+        // {
+        //     if (completion.Successful)
+        //     {
+        //         Console.Write(completion.Choices.FirstOrDefault()?.Delta.Content);
+        //     }
+        //     else
+        //     {
+        //         if (completion.Error == null)
+        //         {
+        //             throw new Exception("Unknown Error");
+        //         }
+        //
+        //         Console.WriteLine($"{completion.Error.Code}: {completion.Error.Message}");
+        //     }
+        // }
+        
+        // Console.WriteLine("Complete");
+
+        // await chat.GetResponseFromChatbotAsync();
+        await chat.StreamResponseFromChatbotAsync(Console.Write);
+
+        var messageContentBuilder = new StringBuilder();
+        await chat.StreamResponseFromChatbotAsync(delta =>
+        {
+            messageContentBuilder.Append(delta);
+            resultHandler?.Invoke(messageContentBuilder.ToString());
+        });
         var result = chat.MostResentAPIResult;
         return new ChatCompletion
         {
             Id = result.Id,
             Object = result.Object,
             Model = result.Model,
-            Choices = result.Choices.Select(x => new ChatCompletionChoice
+            Choices = new List<ChatCompletionChoice>
             {
-                Index = x.Index,
-                Message = new GptMessage
+                new()
                 {
-                    Role = x.Message.Role,
-                    Content = x.Message.Content
-                },
-                FinishReason = x.FinishReason
-            }).ToList()
+                    Message = new GptMessage
+                    {
+                        Role = Roles.Assistant,
+                        Content = messageContentBuilder.ToString()
+                    },
+                    FinishReason = "stop"
+                }
+            }
         };
     }
 

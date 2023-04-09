@@ -3,6 +3,7 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" />
     <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" />
   </ItemGroup>
 
   <ItemGroup>

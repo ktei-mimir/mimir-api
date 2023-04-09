@@ -46,6 +46,7 @@ public class CreateMessageTests : EndpointTestBase
                     var chatGptApiMock = new Mock<IChatGptApi>();
                     chatGptApiMock.Setup(m =>
                             m.CreateChatCompletion(It.IsAny<CreateChatCompletionRequest>(),
+                                It.IsAny<Action<string>?>(),
                                 It.IsAny<CancellationToken>()))
                         .ReturnsAsync(chatCompletion);
                     services.AddScoped<IChatGptApi>(_ => chatGptApiMock.Object);

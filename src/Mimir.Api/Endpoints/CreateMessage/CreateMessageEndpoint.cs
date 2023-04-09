@@ -29,7 +29,7 @@ public class CreateMessageEndpoint : Endpoint<CreateMessageRequest, MessageDto>
     public override async Task<MessageDto> ExecuteAsync(CreateMessageRequest request, CancellationToken ct)
     {
         var conversationId = Route<string>("conversationId")!;
-        var command = new CreateMessageCommand(conversationId)
+        var command = new CreateMessageCommand(request.ConnectionId, conversationId)
         {
             Content = request.Content
         };
