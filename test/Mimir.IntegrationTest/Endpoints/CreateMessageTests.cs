@@ -48,7 +48,7 @@ public class CreateMessageTests : EndpointTestBase
                             m.CreateChatCompletion(It.IsAny<CreateChatCompletionRequest>(),
                                 It.IsAny<CancellationToken>()))
                         .ReturnsAsync(chatCompletion);
-                    services.AddSingleton<IChatGptApi>(_ => chatGptApiMock.Object);
+                    services.AddScoped<IChatGptApi>(_ => chatGptApiMock.Object);
                 });
             })
             .CreateClient();

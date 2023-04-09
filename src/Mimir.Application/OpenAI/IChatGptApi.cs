@@ -1,14 +1,11 @@
-﻿using Refit;
-
+﻿
 namespace Mimir.Application.OpenAI;
 
 public interface IChatGptApi
 {
-    [Post("/v1/chat/completions")]
-    Task<ChatCompletion> CreateChatCompletion([Body] CreateChatCompletionRequest request,
+    Task<ChatCompletion> CreateChatCompletion(CreateChatCompletionRequest request,
         CancellationToken cancellationToken = default);
     
-    [Post("/v1/completions")]
-    Task<Completion> CreateCompletion([Body] CreateCompletionRequest request,
+    Task<Completion> CreateCompletion(CreateCompletionRequest request,
         CancellationToken cancellationToken = default);
 }

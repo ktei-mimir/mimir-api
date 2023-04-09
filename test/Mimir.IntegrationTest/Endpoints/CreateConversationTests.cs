@@ -34,7 +34,7 @@ public class CreateConversationTests : EndpointTestBase
                     // services.AddRefitClient<IChatGptApi>()
                     //     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://test.com"))
                     //     .ConfigurePrimaryHttpMessageHandler(() => mockHttpMessageHandler);
-                    services.AddSingleton<IChatGptApi>(_ => fixture.Create<IChatGptApi>());
+                    services.AddScoped<IChatGptApi>(_ => fixture.Create<IChatGptApi>());
                 });
             })
             .CreateClient();

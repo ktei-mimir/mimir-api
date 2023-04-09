@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Net.Http.Headers;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Runtime;
@@ -9,7 +8,6 @@ using JetBrains.Annotations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Mimir.Api.Configurations;
-using Mimir.Api.HttpMocks;
 using Mimir.Api.Model.Mapping;
 using Mimir.Api.Security;
 using Mimir.Application.Features.CreateConversation;
@@ -19,7 +17,6 @@ using Mimir.Infrastructure.Configurations;
 using Mimir.Infrastructure.Impl;
 using Mimir.Infrastructure.OpenAI;
 using Mimir.Infrastructure.Repositories;
-using Refit;
 using IMapper = AutoMapper.IMapper;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -69,10 +66,8 @@ builder.Services.AddOptions<DynamoDbOptions>().Bind(builder.Configuration.GetSec
 // AWS services
 var awsOptions = builder.Configuration.GetAWSOptions();
 if (awsOptions.DefaultClientConfig.ServiceURL?.StartsWith("http://localhost") == true)
-{
     // it doesn't matter what credentials we use here, because we're using localstack.
     awsOptions.Credentials = new BasicAWSCredentials("test", "test");
-}
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
@@ -88,39 +83,16 @@ builder.Services.Scan(s => s
 builder.Services.AddSingleton<IDateTime, DateTimeMachine>();
 
 // GPT API registration
-var chatGptOptions = new OpenAIOptions();
-builder.Configuration.Bind("ChatGpt", chatGptOptions);
 builder.Services.Configure<OpenAIOptions>(
     builder.Configuration.GetSection(OpenAIOptions.Key));
 builder.Services.AddOptions<OpenAIOptions>()
     .Bind(builder.Configuration.GetSection(OpenAIOptions.Key))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-
-builder.Services.AddSingleton<IChatGptApi, ChatGptApi>();
-// var httpClientBuilder = builder.Services
-//     .AddRefitClient<IChatGptApi>()
-//     .ConfigureHttpClient(c =>
-//     {
-//         if (string.IsNullOrWhiteSpace(chatGptOptions.ApiKey))
-//         {
-//             throw new InvalidOperationException("Missing ChatGpt:ApiKey. Please check your configuration.");
-//         }
-//
-//         c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", chatGptOptions.ApiKey);
-//         c.BaseAddress = new Uri(chatGptOptions.ApiDomain);
-//     });
-// if (builder.Configuration.GetValue<bool>("ChatGpt:UseMock"))
-// {
-//     builder.Services.AddSingleton<ChatGptApiHandlerMock>();
-//     httpClientBuilder.ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<ChatGptApiHandlerMock>());
-// }
+builder.Services.AddScoped<IChatGptApi, ChatGptApi>();
 
 // add MediatR
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssemblyContaining<CreateConversationCommandHandler>();
-});
+builder.Services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<CreateConversationCommandHandler>(); });
 
 // automapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
@@ -150,10 +122,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseFastEndpoints();
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwaggerGen(); 
-}
+if (app.Environment.IsDevelopment()) app.UseSwaggerGen();
 
 app.UseExceptionHandler(errorApp =>
 {
