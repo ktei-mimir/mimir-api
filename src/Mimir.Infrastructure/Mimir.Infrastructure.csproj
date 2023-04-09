@@ -6,7 +6,6 @@
     <PackageReference Include="AutoFixture" />
     <PackageReference Include="AWSSDK.DynamoDBv2" />
     <PackageReference Include="Microsoft.Extensions.Options" />
-    <PackageReference Include="RichardSzalay.MockHttp" />
     <PackageReference Include="System.ComponentModel.Annotations" />
   </ItemGroup>
 </Project>

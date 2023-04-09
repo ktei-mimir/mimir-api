@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MediatR;
 using Mimir.Application.ChatGpt;
+using Mimir.Application.Interfaces;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 
@@ -11,14 +12,14 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
 {
     private readonly IChatGptApi _chatGptApi;
     private readonly IConversationRepository _conversationRepository;
-    private readonly IMessageRepository _messageRepository;
+    private readonly IDateTime _dateTime;
 
     public CreateConversationCommandHandler(IChatGptApi chatGptApi, IConversationRepository conversationRepository,
-        IMessageRepository messageRepository)
+        IMessageRepository messageRepository, IDateTime dateTime)
     {
         _chatGptApi = chatGptApi;
         _conversationRepository = conversationRepository;
-        _messageRepository = messageRepository;
+        _dateTime = dateTime;
     }
 
     public async Task<CreateConversationResponse> Handle(CreateConversationCommand command,
@@ -31,26 +32,14 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
             MaxTokens = 20
         }, cancellationToken);
         var conversationTitle = completion.Choices.First().Text;
-        await _conversationRepository.Create(new Conversation(newConversationId, conversationTitle, DateTime.UtcNow),
-            new Message(newConversationId, Roles.User, command.Message, DateTime.UtcNow),
+        await _conversationRepository.Create(new Conversation(newConversationId, conversationTitle, _dateTime.UtcNow()),
+            null,
             cancellationToken);
-        
-        var chatCompletion = await _chatGptApi.CreateChatCompletion(new CreateChatCompletionRequest
-        {
-            Messages = new List<GptMessage> { new() { Role = Roles.User, Content = command.Message } }
-        }, cancellationToken);
-        await _messageRepository.Create(new[]
-        {
-            new Message(newConversationId, Roles.Assistant,
-                chatCompletion.Choices.First().Message.Content, DateTime.UtcNow)
-        }, cancellationToken);
         
         var response = new CreateConversationResponse
         {
             Id = newConversationId,
             Title = conversationTitle,
-            Choices = chatCompletion.Choices.ToArray(),
-            TotalTokens =  chatCompletion.Usage.Add(chatCompletion.Usage).TotalTokens
         };
 
         return response;

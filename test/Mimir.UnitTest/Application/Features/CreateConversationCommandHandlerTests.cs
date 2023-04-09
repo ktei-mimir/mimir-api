@@ -12,7 +12,6 @@ public class CreateConversationCommandHandlerTests
     [Theory, MoqAutoData]
     public async Task Create_a_new_conversation(
         CreateConversationCommand command,
-        ChatCompletion chatCompletion,
         [Frozen] Mock<IChatGptApi> chatGptApiMock,
         CreateConversationCommandHandler sut)
     {
@@ -23,8 +22,6 @@ public class CreateConversationCommandHandlerTests
             {
                 Choices = new List<CompletionChoice> { new() { Text = conversation.Title } }
             });
-        chatGptApiMock.Setup(x => x.CreateChatCompletion(It.IsAny<CreateChatCompletionRequest>(), default))
-            .ReturnsAsync(chatCompletion);
 
         // Act
         var result = await sut.Handle(command, default);
@@ -33,6 +30,5 @@ public class CreateConversationCommandHandlerTests
         result.Should().NotBeNull();
         result.Id.Should().NotBeNullOrEmpty();
         result.Title.Should().Be(conversation.Title);
-        result.Choices.Should().BeEquivalentTo(result.Choices);
     }
 }

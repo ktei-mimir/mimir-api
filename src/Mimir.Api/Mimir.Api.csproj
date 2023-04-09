@@ -26,6 +26,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
     <PackageReference Include="Refit.HttpClientFactory" />
+    <PackageReference Include="RichardSzalay.MockHttp" />
     <PackageReference Include="Scrutor" />
   </ItemGroup>
 

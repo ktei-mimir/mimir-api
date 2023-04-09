@@ -24,7 +24,6 @@ public class CreateConversationTests : EndpointTestBase
     {
         var fixture = new Fixture();
         var completion = fixture.Create<Completion>();
-        var chatCompletion = fixture.Create<ChatCompletion>();
 
         var client = Factory
             .WithWebHostBuilder(builder =>
@@ -35,9 +34,6 @@ public class CreateConversationTests : EndpointTestBase
                     mockHttpMessageHandler.When("/v1/completions")
                         .Respond("application/json",
                             JsonSerializer.Serialize(completion));
-                    mockHttpMessageHandler.When("/v1/chat/completions")
-                        .Respond("application/json",
-                            JsonSerializer.Serialize(chatCompletion));
                     services.AddRefitClient<IChatGptApi>()
                         .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://test.com"))
                         .ConfigurePrimaryHttpMessageHandler(() => mockHttpMessageHandler);
@@ -53,7 +49,6 @@ public class CreateConversationTests : EndpointTestBase
         response.EnsureSuccessStatusCode();
         var actualResponse = await response.Content.ReadFromJsonAsync<CreateConversationResponse>();
         actualResponse.Should().NotBeNull();
-        actualResponse!.Choices.Should().HaveCount(chatCompletion.Choices.Count);
     }
 
     [Fact]

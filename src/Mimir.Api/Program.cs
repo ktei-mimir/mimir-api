@@ -9,12 +9,14 @@ using JetBrains.Annotations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Mimir.Api.Configurations;
+using Mimir.Api.HttpMocks;
 using Mimir.Api.Model.Mapping;
 using Mimir.Api.Security;
 using Mimir.Application.ChatGpt;
 using Mimir.Application.Features.CreateConversation;
+using Mimir.Application.Interfaces;
 using Mimir.Infrastructure.Configurations;
-using Mimir.Infrastructure.HttpMocks;
+using Mimir.Infrastructure.Impl;
 using Mimir.Infrastructure.Repositories;
 using Refit;
 using IMapper = AutoMapper.IMapper;
@@ -81,9 +83,18 @@ builder.Services.Scan(s => s
     .AsImplementedInterfaces()
     .WithScopedLifetime());
 
-// 3rd party API
+// application interfaces
+builder.Services.AddSingleton<IDateTime, DateTimeMachine>();
+
+// GPT API registration
 var chatGptOptions = new ChatGptOptions();
 builder.Configuration.Bind("ChatGpt", chatGptOptions);
+builder.Services.Configure<ChatGptOptions>(
+    builder.Configuration.GetSection(ChatGptOptions.Key));
+builder.Services.AddOptions<ChatGptOptions>()
+    .Bind(builder.Configuration.GetSection(ChatGptOptions.Key))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 var httpClientBuilder = builder.Services
     .AddRefitClient<IChatGptApi>()
     .ConfigureHttpClient(c =>
@@ -98,7 +109,8 @@ var httpClientBuilder = builder.Services
     });
 if (builder.Configuration.GetValue<bool>("ChatGpt:UseMock"))
 {
-    httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() => new ChatGptApiHandlerMock());
+    builder.Services.AddSingleton<ChatGptApiHandlerMock>();
+    httpClientBuilder.ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<ChatGptApiHandlerMock>());
 }
 
 // add MediatR

@@ -2,6 +2,7 @@
 using MediatR;
 using Mimir.Application.ChatGpt;
 using Mimir.Application.Configurations;
+using Mimir.Application.Interfaces;
 using Mimir.Domain.Exceptions;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
@@ -13,18 +14,20 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
 {
     private readonly IMessageRepository _messageRepository;
     private readonly IChatGptApi _chatGptApi;
+    private readonly IDateTime _dateTime;
 
-    public CreateMessageCommandHandler(IMessageRepository messageRepository, IChatGptApi chatGptApi)
+    public CreateMessageCommandHandler(IMessageRepository messageRepository, IChatGptApi chatGptApi, IDateTime dateTime)
     {
         _messageRepository = messageRepository;
         _chatGptApi = chatGptApi;
+        _dateTime = dateTime;
     }
 
     public async Task<Message> Handle(CreateMessageCommand command, CancellationToken cancellationToken)
     {
         var historyMessages = await _messageRepository.ListByConversationId(command.ConversationId, 
             Limits.MaxMessagesPerRequest, cancellationToken);
-        var userMessage = new Message(command.ConversationId, command.Role, command.Content, DateTime.UtcNow);
+        var userMessage = new Message(command.ConversationId, command.Role, command.Content, _dateTime.UtcNow());
         
         // pass the history messages + user message to the GPT
         var chatCompletion = await _chatGptApi.CreateChatCompletion(new CreateChatCompletionRequest
@@ -44,7 +47,7 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
         // pick the first choice
         var firstChoice = chatCompletion.Choices.First();
         var assistantMessage = new Message(command.ConversationId, firstChoice.Message.Role,
-            firstChoice.Message.Content, DateTime.UtcNow);
+            firstChoice.Message.Content, _dateTime.UtcNow());
         
         // save both user message and assistant message
         await _messageRepository.Create(new[] { userMessage, assistantMessage }, cancellationToken);

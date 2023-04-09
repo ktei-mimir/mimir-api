@@ -3,6 +3,7 @@ using AutoFixture.Xunit2;
 using Mimir.Application.ChatGpt;
 using Mimir.Application.Configurations;
 using Mimir.Application.Features.CreateMessage;
+using Mimir.Application.Interfaces;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 using Mimir.UnitTest.Helpers;
@@ -15,6 +16,7 @@ public class CreateMessageCommandHandlerTests
     [Theory, MoqAutoData]
     public async Task Add_a_message_to_a_conversation(
         [Frozen] Mock<IMessageRepository> messageRepositoryMock,
+        [Frozen] Mock<IDateTime> dateTimeMock,
         [Frozen] Mock<IChatGptApi> chatGptApiMock,
         CreateMessageCommandHandler sut)
     {
@@ -33,11 +35,13 @@ public class CreateMessageCommandHandlerTests
         }).ToList();
         var chatCompletion = new Fixture().Create<ChatCompletion>();
         var assistantMessage = new Message(command.ConversationId, chatCompletion.Choices.First().Message.Role,
-            chatCompletion.Choices.First().Message.Content, chatCompletion.Created);
+            chatCompletion.Choices.First().Message.Content, utcNow);
 
         messageRepositoryMock
             .Setup(x => x.ListByConversationId(command.ConversationId, Limits.MaxMessagesPerRequest, default))
             .ReturnsAsync(historyMessages);
+        
+        dateTimeMock.Setup(x => x.UtcNow()).Returns(utcNow);
 
         chatGptApiMock
             .Setup(x => x.CreateChatCompletion(It.IsAny<CreateChatCompletionRequest>(), default))
