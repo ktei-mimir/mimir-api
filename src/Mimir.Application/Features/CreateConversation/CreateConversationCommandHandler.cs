@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MediatR;
-using Mimir.Application.ChatGpt;
 using Mimir.Application.Interfaces;
+using Mimir.Application.OpenAI;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 

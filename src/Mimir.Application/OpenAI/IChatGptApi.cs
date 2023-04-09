@@ -1,6 +1,6 @@
 ﻿using Refit;
 
-namespace Mimir.Application.ChatGpt;
+namespace Mimir.Application.OpenAI;
 
 public interface IChatGptApi
 {

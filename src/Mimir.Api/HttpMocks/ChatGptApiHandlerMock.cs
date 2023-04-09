@@ -3,7 +3,8 @@ using System.Text.Json;
 using AutoFixture;
 using Microsoft.Extensions.Options;
 using Mimir.Api.Configurations;
-using Mimir.Application.ChatGpt;
+using Mimir.Application.OpenAI;
+using Mimir.Infrastructure.Configurations;
 using RichardSzalay.MockHttp;
 
 namespace Mimir.Api.HttpMocks;
@@ -12,7 +13,7 @@ public class ChatGptApiHandlerMock : MockHttpMessageHandler
 {
     private static readonly IFixture Fixture = new Fixture();
 
-    public ChatGptApiHandlerMock(IOptions<ChatGptOptions> optionsAccessor)
+    public ChatGptApiHandlerMock(IOptions<OpenAIOptions> optionsAccessor)
     {
         var chatGptOptions = optionsAccessor.Value;
         this.When(new Uri(new Uri(chatGptOptions.ApiDomain), "/v1/chat/completions").ToString())

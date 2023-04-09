@@ -3,7 +3,7 @@ using AutoFixture;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Mimir.Api.Model.Messages;
-using Mimir.Application.ChatGpt;
+using Mimir.Application.OpenAI;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 

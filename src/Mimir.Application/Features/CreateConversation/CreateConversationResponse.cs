@@ -1,6 +1,4 @@
-﻿using Mimir.Application.ChatGpt;
-
-namespace Mimir.Application.Features.CreateConversation;
+﻿namespace Mimir.Application.Features.CreateConversation;
 
 public class CreateConversationResponse
 {

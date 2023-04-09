@@ -12,11 +12,12 @@ using Mimir.Api.Configurations;
 using Mimir.Api.HttpMocks;
 using Mimir.Api.Model.Mapping;
 using Mimir.Api.Security;
-using Mimir.Application.ChatGpt;
 using Mimir.Application.Features.CreateConversation;
 using Mimir.Application.Interfaces;
+using Mimir.Application.OpenAI;
 using Mimir.Infrastructure.Configurations;
 using Mimir.Infrastructure.Impl;
+using Mimir.Infrastructure.OpenAI;
 using Mimir.Infrastructure.Repositories;
 using Refit;
 using IMapper = AutoMapper.IMapper;
@@ -87,31 +88,33 @@ builder.Services.Scan(s => s
 builder.Services.AddSingleton<IDateTime, DateTimeMachine>();
 
 // GPT API registration
-var chatGptOptions = new ChatGptOptions();
+var chatGptOptions = new OpenAIOptions();
 builder.Configuration.Bind("ChatGpt", chatGptOptions);
-builder.Services.Configure<ChatGptOptions>(
-    builder.Configuration.GetSection(ChatGptOptions.Key));
-builder.Services.AddOptions<ChatGptOptions>()
-    .Bind(builder.Configuration.GetSection(ChatGptOptions.Key))
+builder.Services.Configure<OpenAIOptions>(
+    builder.Configuration.GetSection(OpenAIOptions.Key));
+builder.Services.AddOptions<OpenAIOptions>()
+    .Bind(builder.Configuration.GetSection(OpenAIOptions.Key))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-var httpClientBuilder = builder.Services
-    .AddRefitClient<IChatGptApi>()
-    .ConfigureHttpClient(c =>
-    {
-        if (string.IsNullOrWhiteSpace(chatGptOptions.ApiKey))
-        {
-            throw new InvalidOperationException("Missing ChatGpt:ApiKey. Please check your configuration.");
-        }
 
-        c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", chatGptOptions.ApiKey);
-        c.BaseAddress = new Uri(chatGptOptions.ApiDomain);
-    });
-if (builder.Configuration.GetValue<bool>("ChatGpt:UseMock"))
-{
-    builder.Services.AddSingleton<ChatGptApiHandlerMock>();
-    httpClientBuilder.ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<ChatGptApiHandlerMock>());
-}
+builder.Services.AddSingleton<IChatGptApi, ChatGptApi>();
+// var httpClientBuilder = builder.Services
+//     .AddRefitClient<IChatGptApi>()
+//     .ConfigureHttpClient(c =>
+//     {
+//         if (string.IsNullOrWhiteSpace(chatGptOptions.ApiKey))
+//         {
+//             throw new InvalidOperationException("Missing ChatGpt:ApiKey. Please check your configuration.");
+//         }
+//
+//         c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", chatGptOptions.ApiKey);
+//         c.BaseAddress = new Uri(chatGptOptions.ApiDomain);
+//     });
+// if (builder.Configuration.GetValue<bool>("ChatGpt:UseMock"))
+// {
+//     builder.Services.AddSingleton<ChatGptApiHandlerMock>();
+//     httpClientBuilder.ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<ChatGptApiHandlerMock>());
+// }
 
 // add MediatR
 builder.Services.AddMediatR(cfg =>

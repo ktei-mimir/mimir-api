@@ -6,6 +6,7 @@
     <PackageReference Include="AutoFixture" />
     <PackageReference Include="AWSSDK.DynamoDBv2" />
     <PackageReference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="OpenAI" />
     <PackageReference Include="System.ComponentModel.Annotations" />
   </ItemGroup>
 </Project>

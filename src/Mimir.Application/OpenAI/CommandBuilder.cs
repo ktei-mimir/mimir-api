@@ -1,4 +1,4 @@
-﻿namespace Mimir.Application.ChatGpt;
+﻿namespace Mimir.Application.OpenAI;
 
 public static class CommandBuilder
 {

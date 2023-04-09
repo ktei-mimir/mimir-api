@@ -1,6 +1,6 @@
 ﻿using AutoFixture.Xunit2;
-using Mimir.Application.ChatGpt;
 using Mimir.Application.Features.CreateConversation;
+using Mimir.Application.OpenAI;
 using Mimir.Domain.Models;
 using Mimir.UnitTest.Helpers;
 using Moq;

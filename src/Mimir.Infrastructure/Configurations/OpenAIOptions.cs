@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Mimir.Api.Configurations;
+namespace Mimir.Infrastructure.Configurations;
 
-public class ChatGptOptions
+public class OpenAIOptions
 {
-    public const string Key = "ChatGpt";
+    public const string Key = "OpenAI";
     
     [Required(AllowEmptyStrings = false)]
     public string ApiDomain { get; set; } = string.Empty;

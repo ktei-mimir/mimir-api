@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Mimir.Application.ChatGpt;
+namespace Mimir.Application.OpenAI;
 
 public class CreateCompletionRequest
 {

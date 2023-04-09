@@ -1,6 +1,6 @@
 ﻿using Mimir.Domain.Helpers;
 
-namespace Mimir.Application.ChatGpt;
+namespace Mimir.Application.OpenAI;
 
 public readonly record struct GptMessage(string Role, string Content)
 {

@@ -1,4 +1,4 @@
-﻿namespace Mimir.Application.ChatGpt;
+﻿namespace Mimir.Application.OpenAI;
 
 public class ChatCompletion
 {
@@ -6,8 +6,6 @@ public class ChatCompletion
 
     public string Object { get; set; } = string.Empty;
     
-    public long Created { get; set; }
-
     public string Model { get; set; } = string.Empty;
 
     public Usage Usage { get; set; } = new();

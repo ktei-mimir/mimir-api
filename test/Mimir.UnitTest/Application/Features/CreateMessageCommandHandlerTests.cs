@@ -1,9 +1,9 @@
 ﻿using AutoFixture;
 using AutoFixture.Xunit2;
-using Mimir.Application.ChatGpt;
 using Mimir.Application.Configurations;
 using Mimir.Application.Features.CreateMessage;
 using Mimir.Application.Interfaces;
+using Mimir.Application.OpenAI;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 using Mimir.UnitTest.Helpers;

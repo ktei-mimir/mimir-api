@@ -1,15 +1,13 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using AutoFixture;
+using AutoFixture.AutoMoq;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Mimir.Api.Model.Conversations;
-using Mimir.Application.ChatGpt;
 using Mimir.Application.Features.CreateConversation;
-using Refit;
-using RichardSzalay.MockHttp;
+using Mimir.Application.OpenAI;
 
 namespace Mimir.IntegrationTest.Endpoints;
 
@@ -22,21 +20,21 @@ public class CreateConversationTests : EndpointTestBase
     [Fact]
     public async Task Create_a_conversation()
     {
-        var fixture = new Fixture();
-        var completion = fixture.Create<Completion>();
+        var fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
 
         var client = Factory
             .WithWebHostBuilder(builder =>
             {
                 builder.ConfigureTestServices(services =>
                 {
-                    var mockHttpMessageHandler = new MockHttpMessageHandler();
-                    mockHttpMessageHandler.When("/v1/completions")
-                        .Respond("application/json",
-                            JsonSerializer.Serialize(completion));
-                    services.AddRefitClient<IChatGptApi>()
-                        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://test.com"))
-                        .ConfigurePrimaryHttpMessageHandler(() => mockHttpMessageHandler);
+                    // var mockHttpMessageHandler = new MockHttpMessageHandler();
+                    // mockHttpMessageHandler.When("/v1/completions")
+                    //     .Respond("application/json",
+                    //         JsonSerializer.Serialize(completion));
+                    // services.AddRefitClient<IChatGptApi>()
+                    //     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://test.com"))
+                    //     .ConfigurePrimaryHttpMessageHandler(() => mockHttpMessageHandler);
+                    services.AddSingleton<IChatGptApi>(_ => fixture.Create<IChatGptApi>());
                 });
             })
             .CreateClient();

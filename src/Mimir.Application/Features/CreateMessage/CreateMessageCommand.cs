@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Mimir.Application.ChatGpt;
+using Mimir.Application.OpenAI;
 using Mimir.Domain.Models;
 
 namespace Mimir.Application.Features.CreateMessage;
