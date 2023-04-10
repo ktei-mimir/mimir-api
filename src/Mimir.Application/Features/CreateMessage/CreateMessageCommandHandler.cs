@@ -47,7 +47,7 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
                 Role = x.Role,
                 Content = x.Content
             }).ToList()
-        }, (messageContent) => hubUser.StreamMessage(new StreamMessageRequest
+        }, (messageContent) => hubUser?.StreamMessage(new StreamMessageRequest
         {
             StreamId = command.StreamId,
             ConversationId = command.ConversationId,

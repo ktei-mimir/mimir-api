@@ -21,6 +21,17 @@ public class ChatGptApi : IChatGptApi
         Action<string>? resultHandler = null,
         CancellationToken cancellationToken = default)
     {
+        // var completionResult = await _openAIService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
+        // {
+        //     Model = OpenAIModels.Gpt3Turbo,
+        //     Messages = request.Messages.Select(m => m.Role switch
+        //     {
+        //         Roles.User => ChatMessage.FromUser(m.Content),
+        //         Roles.Assistant => ChatMessage.FromAssistant(m.Content),
+        //         _ => throw new NotSupportedException($"Role {m.Role} is not supported")
+        //     }).ToList()
+        // }, cancellationToken: cancellationToken);
+        
         var completionResult = _openAIService.ChatCompletion.CreateCompletionAsStream(new ChatCompletionCreateRequest
         {
             Model = OpenAIModels.Gpt3Turbo,
@@ -44,7 +55,7 @@ public class ChatGptApi : IChatGptApi
             {
                 if (completion.Error == null)
                     throw new ChatCompletionException("Chat completion failed due to unknown error");
-
+        
                 throw new ChatCompletionException(
                     $"Chat completion failed: {completion.Error.Code}- {completion.Error.Message}");
             }
@@ -59,6 +70,7 @@ public class ChatGptApi : IChatGptApi
                     {
                         Role = Roles.Assistant,
                         Content = messageContentBuilder.ToString()
+                        // Content = completionResult.Choices.FirstOrDefault()?.Message.Content ?? string.Empty
                     },
                     FinishReason = "stop"
                 }

@@ -12,7 +12,6 @@ public class CreateMessageRequestValidator : AbstractValidator<CreateMessageRequ
             .NotEmpty();
 
         RuleFor(x => x.Content)
-            .NotEmpty()
-            .MaximumLength(Message.MaxContentLength);
+            .NotEmpty();
     }
 }

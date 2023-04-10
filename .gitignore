@@ -400,3 +400,5 @@ FodyWeavers.xsd
 
 # AWS SAM
 .aws-sam/
+
+.venv/

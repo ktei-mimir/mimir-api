@@ -4,7 +4,6 @@ namespace Mimir.Domain.Models;
 
 public class Message : Entity
 {
-    public const int MaxContentLength = 1000;
     public string ConversationId { get; private set; }
 
     private string _role;
@@ -33,10 +32,6 @@ public class Message : Entity
             {
                 throw new ArgumentException($"{nameof(Content)} cannot be empty");
             }
-
-            if (value.Length > MaxContentLength)
-                throw new ArgumentOutOfRangeException(
-                    $"The length of {nameof(Content)} cannot exceed {MaxContentLength} characters");
 
             _content = value;
         }

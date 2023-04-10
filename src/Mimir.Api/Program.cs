@@ -86,9 +86,14 @@ builder.Services.AddOptions<DynamoDbOptions>().Bind(builder.Configuration.GetSec
 
 // AWS services
 var awsOptions = builder.Configuration.GetAWSOptions();
-if (awsOptions.DefaultClientConfig.ServiceURL?.StartsWith("http://localhost") == true)
-    // it doesn't matter what credentials we use here, because we're using localstack.
+if (awsOptions.DefaultClientConfig.ServiceURL?.StartsWith("http://localhost") == true ||
+    awsOptions.DefaultClientConfig.ServiceURL?.StartsWith("http://host.docker.internal") == true)
+{
+    // it doesn't matter what credentials we use here,
+    // because if we're using local DynamoDB, the credentials are ignored
+    // but we need to set them to something, otherwise the AWS SDK will throw an exception
     awsOptions.Credentials = new BasicAWSCredentials("test", "test");
+}
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
@@ -123,7 +128,7 @@ builder.Services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // add AWS Lambda support.
-builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
+// builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 
 // CORS
 builder.Services.AddCors(cors =>
@@ -148,7 +153,7 @@ builder.Services.AddScoped<IUserIdentityProvider, HttpUserIdentityProvider>();
 builder.WebHost.UseUrls("http://*:5000");
 
 var app = builder.Build();
-app.MapHealthChecks("/healthy");
+app.MapHealthChecks("/");
 
 app.UseCors("AllowLocal");
 app.MapHub<ConversationHub>("/hubs/conversation");

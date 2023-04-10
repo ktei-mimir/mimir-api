@@ -48,6 +48,7 @@
 | Content | string              |         |
 
 ### CreateMessageRequest
+
 | Field          | Type   | Comment |
 |----------------|--------|---------|
 | ConversationId | string |         |

@@ -10,7 +10,6 @@ public class CreateConversationRequestValidator : Validator<CreateConversationRe
     public CreateConversationRequestValidator()
     {
         RuleFor(x => x.Message)
-            .NotEmpty()
-            .MaximumLength(Message.MaxContentLength);
+            .NotEmpty();
     }
 }
