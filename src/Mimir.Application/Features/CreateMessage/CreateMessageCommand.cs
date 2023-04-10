@@ -6,14 +6,14 @@ namespace Mimir.Application.Features.CreateMessage;
 
 public class CreateMessageCommand : IRequest<Message>
 {
-    public string ConnectionId { get; set; }
+    public string StreamId { get; set; }
     public string ConversationId { get; set; }
     public string Content { get; set; } = string.Empty;
     public string Role => Roles.User;
     
-    public CreateMessageCommand(string connectionId, string conversationId)
+    public CreateMessageCommand(string streamId, string conversationId)
     {
-        ConnectionId = connectionId;
+        StreamId = streamId;
         ConversationId = conversationId;
     }
 }

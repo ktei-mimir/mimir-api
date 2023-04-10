@@ -49,6 +49,7 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
             }).ToList()
         }, (messageContent) => hubUser.SendAsync("ReceiveMessage", new
         {
+            command.StreamId,
             command.ConversationId,
             Role = Roles.Assistant,
             Content = messageContent

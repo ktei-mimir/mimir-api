@@ -77,7 +77,6 @@ public class ChatGptApi : IChatGptApi
         // Console.WriteLine("Complete");
 
         // await chat.GetResponseFromChatbotAsync();
-        await chat.StreamResponseFromChatbotAsync(Console.Write);
 
         var messageContentBuilder = new StringBuilder();
         await chat.StreamResponseFromChatbotAsync(delta =>
