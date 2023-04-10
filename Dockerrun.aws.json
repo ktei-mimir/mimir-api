@@ -1,0 +1,13 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "504224764639.dkr.ecr.ap-southeast-2.amazonaws.com/mimir:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "HostPort": "80",
+      "ContainerPort": "5000"
+    }
+  ]
+}

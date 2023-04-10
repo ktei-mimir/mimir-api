@@ -1,0 +1,5 @@
+.aws-sam/
+.venv/
+design/
+.gitignore
+docker-compose.yml
