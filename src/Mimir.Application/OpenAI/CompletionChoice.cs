@@ -7,5 +7,5 @@ public class CompletionChoice
     
     public string FinishReason { get; set; } = string.Empty;
     
-    public int Index { get; set; }
+    public int? Index { get; set; }
 }

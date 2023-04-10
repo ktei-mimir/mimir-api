@@ -18,11 +18,11 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
     private readonly IMessageRepository _messageRepository;
     private readonly IChatGptApi _chatGptApi;
     private readonly IDateTime _dateTime;
-    private readonly IHubContext<ConversationHub> _hubContext;
+    private readonly IHubContext<ConversationHub, IConversationClient> _hubContext;
     private readonly IUserIdentityProvider _userIdentityProvider;
 
     public CreateMessageCommandHandler(IMessageRepository messageRepository, IChatGptApi chatGptApi, IDateTime dateTime,
-        IHubContext<ConversationHub> hubContext, IUserIdentityProvider userIdentityProvider)
+        IHubContext<ConversationHub, IConversationClient> hubContext, IUserIdentityProvider userIdentityProvider)
     {
         _messageRepository = messageRepository;
         _chatGptApi = chatGptApi;
@@ -47,13 +47,12 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
                 Role = x.Role,
                 Content = x.Content
             }).ToList()
-        }, (messageContent) => hubUser.SendAsync("ReceiveMessage", new
+        }, (messageContent) => hubUser.StreamMessage(new StreamMessageRequest
         {
-            command.StreamId,
-            command.ConversationId,
-            Role = Roles.Assistant,
+            StreamId = command.StreamId,
+            ConversationId = command.ConversationId,
             Content = messageContent
-        }, cancellationToken), cancellationToken);
+        }), cancellationToken);
         
         // there should be at least one choice
         if (!chatCompletion.Choices.Any())

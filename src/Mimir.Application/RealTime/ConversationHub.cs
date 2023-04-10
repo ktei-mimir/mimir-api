@@ -2,7 +2,7 @@
 
 namespace Mimir.Application.RealTime;
 
-public class ConversationHub : Hub
+public class ConversationHub : Hub<IConversationClient>
 {
     public override async Task OnConnectedAsync()
     {
