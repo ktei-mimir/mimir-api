@@ -1,10 +1,10 @@
 locals {
-  name = "${var.app_name}-autoscaling-${var.environment}"
+  cluster_name = "${var.app_name}-apps-${var.environment}"
 
   user_data = <<-EOT
     #!/bin/bash
     cat <<'EOF' >> /etc/ecs/ecs.config
-    ECS_CLUSTER=${local.name}
+    ECS_CLUSTER=${local.cluster_name}
     ECS_LOGLEVEL=debug
     EOF
   EOT
@@ -12,8 +12,29 @@ locals {
   instance_type = "t4g.nano"
 
   tags = {
-    Name       = local.name
+    Name       = local.cluster_name
     Repository = "https://github.com/terraform-aws-modules/terraform-aws-ecs"
+  }
+}
+
+module "ecs" {
+  source = "terraform-aws-modules/ecs/aws"
+
+  cluster_name = local.cluster_name
+
+  cluster_configuration = {
+    execute_command_configuration = {
+      logging = "OVERRIDE"
+      log_configuration = {
+        cloud_watch_log_group_name = "/aws/ecs/${local.cluster_name}"
+      }
+    }
+  }
+  autoscaling_capacity_providers = {
+    one = {
+      auto_scaling_group_arn         = module.autoscaling.autoscaling_group_arn
+      managed_termination_protection = "ENABLED"
+    }
   }
 }
 
@@ -21,7 +42,7 @@ module "autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
   version = "~> 6.5"
 
-  name          = "${local.name}-one"
+  name          = "${local.cluster_name}-one"
   instance_type = local.instance_type
 
   use_mixed_instances_policy = true
@@ -39,13 +60,16 @@ module "autoscaling" {
   }
   image_id = jsondecode(data.aws_ssm_parameter.ecs_optimized_ami.value)["image_id"]
 
-  security_groups                 = [module.autoscaling_sg.security_group_id]
+  security_groups = [module.autoscaling_sg.security_group_id]
+  network_interfaces = [{
+    associate_public_ip_address = true
+  }]
   user_data                       = base64encode(local.user_data)
   ignore_desired_capacity_changes = true
 
   create_iam_instance_profile = true
-  iam_role_name               = local.name
-  iam_role_description        = "ECS role for ${local.name}"
+  iam_role_name               = local.cluster_name
+  iam_role_description        = "ECS role for ${local.cluster_name}"
   iam_role_policies = {
     AmazonEC2ContainerServiceforEC2Role = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
     AmazonSSMManagedInstanceCore        = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -72,7 +96,7 @@ module "autoscaling_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
 
-  name        = local.name
+  name        = local.cluster_name
   description = "Autoscaling group security group"
   vpc_id      = var.vpc_id
 

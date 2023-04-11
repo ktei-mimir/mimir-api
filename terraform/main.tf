@@ -18,8 +18,8 @@ module "vpc" {
   vpc_name    = "disasterdev"
 }
 
-module "autoscaling" {
-  source      = "./autoscaling"
+module "ecs" {
+  source      = "./ecs"
   app_name    = "mimir"
   environment = "prod"
   vpc_id      = module.vpc.vpc_id
