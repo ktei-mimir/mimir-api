@@ -24,7 +24,9 @@ resource "aws_ecs_service" "service" {
   name    = "${var.app_name}-${var.environment}"
   cluster = local.cluster_name
   # task_definition = aws_ecs_task_definition.task.arn
-  desired_count = 1
+  desired_count                      = 1
+  deployment_maximum_percent         = 100
+  deployment_minimum_healthy_percent = 0
 
   ordered_placement_strategy {
     type  = "binpack"
