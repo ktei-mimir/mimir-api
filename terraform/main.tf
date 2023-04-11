@@ -15,5 +15,13 @@ terraform {
 module "vpc" {
   source      = "./vpc"
   environment = "prod"
-  vpc_name    = "mimir"
+  vpc_name    = "disasterdev"
+}
+
+module "autoscaling" {
+  source      = "./autoscaling"
+  app_name    = "mimir"
+  environment = "prod"
+  vpc_id      = module.vpc.vpc_id
+  subnets     = module.vpc.public_subnets
 }

@@ -1,5 +1,5 @@
 locals {
-  name = "${var.environment}-${var.vpc_name}"
+  name = "${var.vpc_name}-${var.environment}"
 }
 
 module "vpc" {
