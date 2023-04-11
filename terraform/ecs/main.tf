@@ -6,8 +6,35 @@ locals {
     #!/bin/bash
     cat <<'EOF' >> /etc/ecs/ecs.config
     ECS_CLUSTER=${local.cluster_name}
-    ECS_LOGLEVEL=debug
+    ECS_LOGLEVEL=info
     EOF
+
+    echo "INSTALLING AWS CLI"
+    yum update -y
+    yum -y install aws-cli
+
+    INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+    MAXWAIT=3
+    ALLOC_ID=eipalloc-0aebdac9f5315549a
+    AWS_DEFAULT_REGION=ap-southeast-2
+
+    # Make sure the EIP is free
+    echo "Checking if EIP with ALLOC_ID[$ALLOC_ID] is free...."
+    ISFREE=$(aws ec2 describe-addresses --allocation-ids $ALLOC_ID --query Addresses[].InstanceId --output text --region ap-southeast-2)
+    STARTWAIT=$(date +%s)
+    while [ ! -z "$ISFREE" ]; do
+        if [ "$(($(date +%s) - $STARTWAIT))" -gt $MAXWAIT ]; then
+            echo "WARNING: We waited 30 seconds, we're forcing it now."
+            ISFREE=""
+        else
+            echo "Waiting for EIP with ALLOC_ID[$ALLOC_ID] to become free...."
+            sleep 3
+            ISFREE=$(aws ec2 describe-addresses --allocation-ids $ALLOC_ID --query Addresses[].InstanceId --output text --region ap-southeast-2)
+        fi
+    done
+
+    # Now we can associate the address
+    aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id $ALLOC_ID --allow-reassociation --region ap-southeast-2
   EOT
 
   instance_type = "t4g.nano"
@@ -24,7 +51,7 @@ resource "aws_ecs_service" "service" {
   name    = "${var.app_name}-${var.environment}"
   cluster = local.cluster_name
   # task_definition = aws_ecs_task_definition.task.arn
-  desired_count                      = 1
+  desired_count                      = 0
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
 
@@ -146,9 +173,13 @@ module "ecs" {
 module "autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
   version = "~> 6.5"
+  depends_on = [
+    aws_iam_policy.asg_instance_profile
+  ]
 
   name          = "${local.cluster_name}-one"
   instance_type = local.instance_type
+  key_name      = "mimir-ssh"
 
   use_mixed_instances_policy = true
   mixed_instances_policy = {
@@ -163,7 +194,8 @@ module "autoscaling" {
       }
     ]
   }
-  image_id = jsondecode(data.aws_ssm_parameter.ecs_optimized_ami.value)["image_id"]
+  image_id               = jsondecode(data.aws_ssm_parameter.ecs_optimized_ami.value)["image_id"]
+  update_default_version = true
 
   security_groups = [module.autoscaling_sg.security_group_id]
   network_interfaces = [{
@@ -174,10 +206,11 @@ module "autoscaling" {
 
   create_iam_instance_profile = true
   iam_role_name               = local.cluster_name
-  iam_role_description        = "ECS role for ${local.cluster_name}"
+  iam_role_description        = "ECS cluster instance profile role for ${local.cluster_name}"
   iam_role_policies = {
     AmazonEC2ContainerServiceforEC2Role = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
     AmazonSSMManagedInstanceCore        = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    AssociateElasticIP                  = aws_iam_policy.asg_instance_profile.arn
   }
 
   vpc_zone_identifier = var.subnets
@@ -197,6 +230,24 @@ module "autoscaling" {
   tags = local.tags
 }
 
+resource "aws_iam_policy" "asg_instance_profile" {
+  name   = "${var.app_name}-${var.environment}-asg-instance-profile"
+  policy = data.aws_iam_policy_document.asg_instance_profile.json
+}
+
+data "aws_iam_policy_document" "asg_instance_profile" {
+  statement {
+    actions = [
+      "ec2:DescribeAddresses",
+      "ec2:AssociateAddress",
+      "ec2:DisassociateAddress"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+
 module "autoscaling_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
@@ -209,6 +260,16 @@ module "autoscaling_sg" {
   ingress_rules       = ["http-80-tcp"]
 
   egress_rules = ["all-all"]
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      description = "SSH"
+      cidr_blocks = "0.0.0.0/0"
+    }
+  ]
 
   tags = local.tags
 }
