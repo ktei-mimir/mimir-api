@@ -1,0 +1,39 @@
+[
+  {
+    "name": "mimir-prod",
+    "image": "504224764639.dkr.ecr.ap-southeast-2.amazonaws.com/mimir-prod:latest",
+    "cpu": 2048,
+    "memory": 256,
+    "portMappings": [
+      {
+        "containerPort": 5000
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "mimir-prod",
+        "awslogs-region": "ap-southeast-2",
+        "awslogs-stream-prefix": "streaming"
+      }
+    },
+    "environment": [
+      {
+        "name": "ASPNETCORE_ENVIRONMENT",
+        "value": "Production"
+      },
+      {
+        "name": "Logging__LogLevel__System",
+        "value": "Error"
+      },
+      {
+        "name": "Logging__LogLevel__Microsoft",
+        "value": "Error"
+      },
+      {
+        "name": "OpenAI__ApiKey",
+        "value": "${ssm:/app/mimir/OpenAI__ApiKey/prod}"
+      }
+    ]
+  }
+]

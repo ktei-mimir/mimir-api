@@ -3,3 +3,4 @@
 design/
 .gitignore
 docker-compose.yml
+Dockerfile

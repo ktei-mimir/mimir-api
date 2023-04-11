@@ -14,3 +14,7 @@ variable "subnets" {
   type    = list(string)
   default = []
 }
+
+variable "task_definition_file" {
+  type = string
+}

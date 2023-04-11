@@ -1,5 +1,6 @@
 locals {
-  cluster_name = "${var.app_name}-apps-${var.environment}"
+  cluster_name  = "${var.app_name}-apps-${var.environment}"
+  ecr_repo_name = "${var.app_name}-${var.environment}"
 
   user_data = <<-EOT
     #!/bin/bash
@@ -11,9 +12,101 @@ locals {
 
   instance_type = "t4g.nano"
 
+  region = split(":", data.aws_caller_identity.current.arn)[3]
+
   tags = {
     Name       = local.cluster_name
     Repository = "https://github.com/terraform-aws-modules/terraform-aws-ecs"
+  }
+}
+
+resource "aws_ecs_service" "service" {
+  name            = "${var.app_name}-${var.environment}"
+  cluster         = local.cluster_name
+  task_definition = aws_ecs_task_definition.task.arn
+  desired_count   = 1
+
+  ordered_placement_strategy {
+    type  = "binpack"
+    field = "memory"
+  }
+}
+
+resource "aws_ecs_task_definition" "task" {
+  family                = "${var.app_name}-${var.environment}"
+  task_role_arn         = aws_iam_role.task_role.arn
+  execution_role_arn    = aws_iam_role.task_execution_role.arn
+  cpu                   = 2048
+  memory                = 256
+  container_definitions = file(var.task_definition_file)
+}
+
+resource "aws_iam_role" "task_execution_role" {
+  name               = "${var.app_name}-${var.environment}-task-execution"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "task_execution_role" {
+  role       = aws_iam_role.task_execution_role.id
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_policy" "task_execution_role" {
+  name   = "${var.app_name}-${var.environment}-task-execution-policy"
+  policy = data.aws_iam_policy_document.task_execution_role_policy.json
+}
+
+data "aws_iam_policy_document" "task_execution_role_policy" {
+  statement {
+    actions = ["ssm:GetParameters", "ssm:GetParameter"]
+    resources = [
+      "*"
+    ]
+  }
+}
+
+resource "aws_iam_role" "task_role" {
+  name               = "${var.app_name}-${var.environment}-task"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "task_role" {
+  role       = aws_iam_role.task_role.id
+  policy_arn = aws_iam_policy.task_role.arn
+}
+
+resource "aws_iam_policy" "task_role" {
+  name   = "${var.app_name}-${var.environment}-task_role_policy"
+  policy = data.aws_iam_policy_document.task_role_policy.json
+}
+
+data "aws_iam_policy_document" "task_role_policy" {
+  statement {
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "arn:aws:logs:${local.region}:${data.aws_caller_identity.current.account_id}:log-group:${var.app_name}-${var.environment}",
+      "arn:aws:logs:${local.region}:${data.aws_caller_identity.current.account_id}:log-group:${var.app_name}-${var.environment}:*",
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "ecs_task_assume_policy" {
+  statement {
+
+    actions = [
+      "sts:AssumeRole"
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+
+    effect = "Allow"
   }
 }
 
@@ -108,7 +201,36 @@ module "autoscaling_sg" {
   tags = local.tags
 }
 
+resource "aws_ecr_repository" "images_repo" {
+  name = local.ecr_repo_name
+}
+
+resource "aws_ecr_lifecycle_policy" "images_repo_policy" {
+  repository = aws_ecr_repository.images_repo.name
+
+  policy = <<EOF
+{
+    "rules": [
+        {
+            "rulePriority": 1,
+            "description": "Keep last 5 images",
+            "selection": {
+                "tagStatus": "any",
+                "countType": "imageCountMoreThan",
+                "countNumber": 5
+            },
+            "action": {
+                "type": "expire"
+            }
+        }
+    ]
+}
+EOF
+}
+
 # Supporting resources
+data "aws_caller_identity" "current" {}
+
 # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#ecs-optimized-ami-linux
 data "aws_ssm_parameter" "ecs_optimized_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/arm64/recommended"
