@@ -400,3 +400,8 @@ FodyWeavers.xsd
 
 # AWS SAM
 .aws-sam/
+
+# terraform
+.terraform/
+.terraform.lock*
+tfplan
