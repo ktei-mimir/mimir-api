@@ -32,6 +32,16 @@ resource "aws_ecs_service" "service" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "log_group" {
+  name              = "${var.app_name}-${var.environment}"
+  retention_in_days = 7
+
+  tags = {
+    Environment = var.environment
+    Application = "${var.app_name}-${var.environment}"
+  }
+}
+
 # resource "aws_ecs_task_definition" "task" {
 #   family                = "${var.app_name}-${var.environment}"
 #   task_role_arn         = aws_iam_role.task_role.arn
