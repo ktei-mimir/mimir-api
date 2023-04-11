@@ -5,7 +5,7 @@ RUN dotnet restore
 RUN dotnet publish ./src/Mimir.Api -c release -o /app --no-restore
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:6.0.15-alpine3.17-arm64v8
 WORKDIR /app
 COPY --from=build /app ./
 EXPOSE 5000
