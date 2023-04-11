@@ -204,7 +204,7 @@ module "autoscaling_sg" {
   vpc_id      = var.vpc_id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["https-443-tcp"]
+  ingress_rules       = ["http-80-tcp"]
 
   egress_rules = ["all-all"]
 
