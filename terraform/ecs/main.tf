@@ -21,10 +21,10 @@ locals {
 }
 
 resource "aws_ecs_service" "service" {
-  name            = "${var.app_name}-${var.environment}"
-  cluster         = local.cluster_name
-  task_definition = aws_ecs_task_definition.task.arn
-  desired_count   = 1
+  name    = "${var.app_name}-${var.environment}"
+  cluster = local.cluster_name
+  # task_definition = aws_ecs_task_definition.task.arn
+  desired_count = 1
 
   ordered_placement_strategy {
     type  = "binpack"
@@ -32,14 +32,14 @@ resource "aws_ecs_service" "service" {
   }
 }
 
-resource "aws_ecs_task_definition" "task" {
-  family                = "${var.app_name}-${var.environment}"
-  task_role_arn         = aws_iam_role.task_role.arn
-  execution_role_arn    = aws_iam_role.task_execution_role.arn
-  cpu                   = 2048
-  memory                = 256
-  container_definitions = file(var.task_definition_file)
-}
+# resource "aws_ecs_task_definition" "task" {
+#   family                = "${var.app_name}-${var.environment}"
+#   task_role_arn         = aws_iam_role.task_role.arn
+#   execution_role_arn    = aws_iam_role.task_execution_role.arn
+#   cpu                   = 2048
+#   memory                = 256
+#   container_definitions = file(var.task_definition_file)
+# }
 
 resource "aws_iam_role" "task_execution_role" {
   name               = "${var.app_name}-${var.environment}-task-execution"
