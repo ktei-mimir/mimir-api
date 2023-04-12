@@ -35,12 +35,14 @@
           "value": "Error"
         },
         {
-          "name": "OpenAI__ApiKey",
-          "value": "${ssm:/app/mimir/OpenAI__ApiKey/prod}"
-        },
-        {
           "name": "DynamoDB__TableName",
           "value": "mimir-prod"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "OpenAI__ApiKey",
+          "valueFrom": "arn:aws:ssm:ap-southeast-2:504224764639:parameter/app/mimir/OpenAI__ApiKey/prod"
         }
       ]
     }

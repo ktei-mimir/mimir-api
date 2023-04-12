@@ -54,10 +54,10 @@ public class ChatGptApi : IChatGptApi
             else
             {
                 if (completion.Error == null)
-                    throw new ChatCompletionException("Chat completion failed due to unknown error");
+                    throw new OpenAIAPIException("Chat completion failed due to unknown error");
         
-                throw new ChatCompletionException(
-                    $"Chat completion failed: {completion.Error.Code}- {completion.Error.Message}");
+                throw new OpenAIAPIException(
+                    $"Chat completion failed: {completion.Error.Code} - {completion.Error.Message}");
             }
 
         return new ChatCompletion
@@ -86,6 +86,11 @@ public class ChatGptApi : IChatGptApi
             Prompt = request.Prompt,
             Model = OpenAIModels.Davinci,
         }, cancellationToken: cancellationToken);
+        if (result.Error != null)
+        {
+            throw new OpenAIAPIException(
+                $"Completion failed: {result.Error.Code} - {result.Error.Message}");
+        }
         return new Completion
         {
             Choices = result.Choices.Select(x => new CompletionChoice
