@@ -37,6 +37,10 @@
         {
           "name": "OpenAI__ApiKey",
           "value": "${ssm:/app/mimir/OpenAI__ApiKey/prod}"
+        },
+        {
+          "name": "DynamoDB__TableName",
+          "value": "mimir-prod"
         }
       ]
     }

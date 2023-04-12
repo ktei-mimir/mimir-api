@@ -26,3 +26,9 @@ module "ecs" {
   subnets              = module.vpc.public_subnets
   task_definition_file = "./ecs/task-definition.json"
 }
+
+module "resources" {
+  source      = "./resources"
+  app_name    = "mimir"
+  environment = "prod"
+}

@@ -51,7 +51,7 @@ resource "aws_ecs_service" "service" {
   name    = "${var.app_name}-${var.environment}"
   cluster = local.cluster_name
   # task_definition = aws_ecs_task_definition.task.arn
-  desired_count                      = 0
+  desired_count                      = 1
   deployment_maximum_percent         = 100
   deployment_minimum_healthy_percent = 0
 
@@ -129,6 +129,26 @@ data "aws_iam_policy_document" "task_role_policy" {
     resources = [
       "arn:aws:logs:${local.region}:${data.aws_caller_identity.current.account_id}:log-group:${var.app_name}-${var.environment}",
       "arn:aws:logs:${local.region}:${data.aws_caller_identity.current.account_id}:log-group:${var.app_name}-${var.environment}:*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:ConditionCheckItem",
+      "dynamodb:Query",
+      "dynamodb:PutItem",
+    ]
+    resources = [
+      "arn:aws:dynamodb:${local.region}:${data.aws_caller_identity.current.account_id}:table/${var.app_name}-${var.environment}",
+    ]
+  }
+  statement {
+    actions = [
+      "dynamodb:Query"
+    ]
+    resources = [
+      "arn:aws:dynamodb:${local.region}:${data.aws_caller_identity.current.account_id}:table/${var.app_name}-${var.environment}/index/*"
     ]
   }
 }
