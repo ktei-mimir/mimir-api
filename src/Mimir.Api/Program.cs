@@ -15,6 +15,7 @@ using Mimir.Application.Interfaces;
 using Mimir.Application.OpenAI;
 using Mimir.Application.RealTime;
 using Mimir.Application.Security;
+using Mimir.Domain.Exceptions;
 using Mimir.Infrastructure.Configurations;
 using Mimir.Infrastructure.Impl;
 using Mimir.Infrastructure.OpenAI;
@@ -173,9 +174,15 @@ app.UseExceptionHandler(errorApp =>
         var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
         Debug.Assert(exceptionHandlerPathFeature != null);
         var exception = exceptionHandlerPathFeature.Error;
-
-        // Log the exception
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        
+        if (exception is OpenAIAPIException or NoChoiceProvidedException)
+        {
+            context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            await context.Response.WriteAsync("OpenAPI encountered an error. Please try again later.");
+            logger.LogError(exception, "An unhandled exception has occurred");
+        }
+
         logger.LogError(exception, "An unhandled exception has occurred");
         await context.Response.WriteAsync("An unexpected error occurred.");
     });
