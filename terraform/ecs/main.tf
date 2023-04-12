@@ -1,8 +1,8 @@
 locals {
   cluster_name  = "${var.app_name}-apps-${var.environment}"
   ecr_repo_name = "${var.app_name}-${var.environment}"
-
-  user_data = <<-EOT
+  region        = var.region
+  user_data     = <<-EOT
     #!/bin/bash
     cat <<'EOF' >> /etc/ecs/ecs.config
     ECS_CLUSTER=${local.cluster_name}
@@ -38,8 +38,6 @@ locals {
   EOT
 
   instance_type = "t4g.nano"
-
-  region = split(":", data.aws_caller_identity.current.arn)[3]
 
   tags = {
     Name       = local.cluster_name

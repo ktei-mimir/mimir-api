@@ -21,6 +21,7 @@ module "vpc" {
 module "ecs" {
   source               = "./ecs"
   app_name             = "mimir"
+  region               = "ap-southeast-2"
   environment          = "prod"
   vpc_id               = module.vpc.vpc_id
   subnets              = module.vpc.public_subnets
