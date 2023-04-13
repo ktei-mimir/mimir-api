@@ -176,15 +176,22 @@ app.UseExceptionHandler(errorApp =>
         var exception = exceptionHandlerPathFeature.Error;
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
         
-        if (exception is OpenAIAPIException or NoChoiceProvidedException)
+        switch (exception)
         {
-            context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
-            await context.Response.WriteAsync("OpenAPI encountered an error. Please try again later.");
-            logger.LogError(exception, "An unhandled exception has occurred");
+            case OpenAIAPIException or NoChoiceProvidedException:
+                context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+                await context.Response.WriteAsync("OpenAPI encountered an error. Please try again later.");
+                logger.LogError(exception, "An unhandled exception has occurred");
+                break;
+            case InsufficientPermissionException:
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsync("You don't have permission to perform this action.");
+                break;
+            default:
+                logger.LogError(exception, "An unhandled exception has occurred");
+                await context.Response.WriteAsync("An unexpected error occurred.");
+                break;
         }
-
-        logger.LogError(exception, "An unhandled exception has occurred");
-        await context.Response.WriteAsync("An unexpected error occurred.");
     });
 });
 
