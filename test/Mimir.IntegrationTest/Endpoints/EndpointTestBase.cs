@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Mimir.IntegrationTest.Helpers;
 
@@ -12,6 +13,13 @@ public class EndpointTestBase : IClassFixture<WebApplicationFactory<Program>>
     {
         Factory = factory.WithWebHostBuilder(builder =>
         {
+            builder.ConfigureAppConfiguration((_, configBuilder) =>
+            {
+                configBuilder.AddInMemoryCollection(new KeyValuePair<string, string>[]
+                {
+                    new("OpenAI:ApiKey", "test")
+                });
+            });
             builder.ConfigureTestServices(services =>
             {
                 services.AddAuthentication(options =>

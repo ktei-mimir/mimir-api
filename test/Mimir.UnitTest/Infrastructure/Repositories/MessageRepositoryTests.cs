@@ -45,7 +45,8 @@ public class MessageRepositoryTests
     {
         var conversationId = Guid.NewGuid().ToString();
         var fixture = new Fixture();
-        var conversation = new Conversation(conversationId, Guid.NewGuid().ToString(), DateTime.UtcNow);
+        var username = Guid.NewGuid().ToString();
+        var conversation = new Conversation(conversationId, username, Guid.NewGuid().ToString(), DateTime.UtcNow);
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
         var conversationItem = Document.FromJson(JsonSerializer.Serialize(conversation)).ToAttributeMap();
         conversationItem["PK"] = new AttributeValue($"CONVERSATION#{conversation.Id}");
