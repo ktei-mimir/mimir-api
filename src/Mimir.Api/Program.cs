@@ -47,7 +47,7 @@ builder.Services.AddAuthentication(options =>
         builder.Configuration.Bind("IdP", identityProviderOptions);
         options.Authority = identityProviderOptions.Authority;
         options.Audience = identityProviderOptions.Audience;
-        
+
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -58,10 +58,8 @@ builder.Services.AddAuthentication(options =>
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
                     path.StartsWithSegments("/hubs/conversation"))
-                {
                     // Read the token out of the query string
                     context.Token = accessToken;
-                }
                 return Task.CompletedTask;
             }
         };
@@ -89,12 +87,10 @@ builder.Services.AddOptions<DynamoDbOptions>().Bind(builder.Configuration.GetSec
 var awsOptions = builder.Configuration.GetAWSOptions();
 if (awsOptions.DefaultClientConfig.ServiceURL?.StartsWith("http://localhost") == true ||
     awsOptions.DefaultClientConfig.ServiceURL?.StartsWith("http://host.docker.internal") == true)
-{
     // it doesn't matter what credentials we use here,
     // because if we're using local DynamoDB, the credentials are ignored
     // but we need to set them to something, otherwise the AWS SDK will throw an exception
     awsOptions.Credentials = new BasicAWSCredentials("test", "test");
-}
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
@@ -136,7 +132,7 @@ builder.Services.AddCors(cors =>
 {
     cors.AddPolicy("AllowLocal", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000", "https://askmimir.net")
+        policyBuilder.WithOrigins("http://localhost:3000", "https://askmimir.net", "https://askmimir.net")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -175,7 +171,7 @@ app.UseExceptionHandler(errorApp =>
         Debug.Assert(exceptionHandlerPathFeature != null);
         var exception = exceptionHandlerPathFeature.Error;
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-        
+
         switch (exception)
         {
             case OpenAIAPIException or NoChoiceProvidedException:
