@@ -23,46 +23,22 @@ public class ConversationRepository : IConversationRepository
         _options = optionsAccessor.Value;
     }
 
-    public async Task Create(Conversation conversation, Message? firstMessage,
+    public async Task Create(Conversation conversation,
         CancellationToken cancellationToken = default)
     {
         var conversationDocument = _dynamoDbContext.ToDocument(conversation);
         conversationDocument["PK"] = $"CONVERSATION#{conversation.Id}";
         conversationDocument["SK"] = $"CONVERSATION#{conversation.CreatedAt}";
-        conversationDocument["GSI1PK"] = "CONVERSATION";
+        conversationDocument["GSI1PK"] = $"{conversation.Username}#CONVERSATION";
         conversationDocument["GSI1SK"] = conversation.CreatedAt.ToString();
-        var transactItems = new List<TransactWriteItem>
+        await _dynamoDb.PutItemAsync(new PutItemRequest
         {
-            new()
-            {
-                Put = new Put
-                {
-                    Item = conversationDocument.ToAttributeMap(),
-                    TableName = _options.TableName,
-                }
-            }
-        };
-        if (firstMessage != null)
-        {
-            var messageDocument = _dynamoDbContext.ToDocument(firstMessage);
-            messageDocument["PK"] = $"CONVERSATION#{conversation.Id}";
-            messageDocument["SK"] = $"MESSAGE#{firstMessage.CreatedAt}#{firstMessage.Role}";
-            transactItems.Add(new TransactWriteItem
-            {
-                Put = new Put
-                {
-                    Item = messageDocument.ToAttributeMap(),
-                    TableName = _options.TableName
-                }
-            });
-        }
-        await _dynamoDb.TransactWriteItemsAsync(new TransactWriteItemsRequest
-        {
-            TransactItems = transactItems
+            Item = conversationDocument.ToAttributeMap(),
+            TableName = _options.TableName
         }, cancellationToken);
     }
 
-    public async Task<List<Conversation>> ListAll(int limit = 50, CancellationToken cancellationToken = default)
+    public async Task<List<Conversation>> ListByUsername(string username, int limit = 50, CancellationToken cancellationToken = default)
     {
         var request = new QueryRequest
         {
@@ -71,7 +47,7 @@ public class ConversationRepository : IConversationRepository
             KeyConditionExpression = "GSI1PK = :pk",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>
             {
-                { ":pk", new AttributeValue("CONVERSATION") }
+                { ":pk", new AttributeValue($"{username}#CONVERSATION") }
             },
             Limit = limit,
             ScanIndexForward = false // sort in descending order

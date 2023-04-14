@@ -18,7 +18,8 @@ public class ListConversationsQueryHandler : IRequestHandler<ListConversationsQu
 
     public async Task<List<Conversation>> Handle(ListConversationsQuery request, CancellationToken cancellationToken)
     {
-        var conversations = await _conversationRepository.ListAll(Limits.MaxConversationsPerRequest, cancellationToken);
+        var conversations = await _conversationRepository.ListByUsername(
+            request.Username, Limits.MaxConversationsPerRequest, cancellationToken);
         return conversations;
     }
 }

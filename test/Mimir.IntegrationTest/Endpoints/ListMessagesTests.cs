@@ -6,6 +6,7 @@ using Mimir.Api.Model.Messages;
 using Mimir.Application.OpenAI;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
+using Mimir.IntegrationTest.Helpers;
 
 namespace Mimir.IntegrationTest.Endpoints;
 
@@ -24,7 +25,9 @@ public class ListMessagesTests : EndpointTestBase
         {
             var conversationRepository = scope.ServiceProvider.GetRequiredService<IConversationRepository>();
             var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
-            await conversationRepository.Create(new Conversation(conversationId, fixture.Create<string>(),
+            await conversationRepository.Create(new Conversation(conversationId, 
+                TestAuthHandler.DefaultUsername,
+                fixture.Create<string>(),
                 DateTime.UtcNow));
             var utcNow = DateTime.UtcNow;
             var messages = Enumerable.Range(0, 30)

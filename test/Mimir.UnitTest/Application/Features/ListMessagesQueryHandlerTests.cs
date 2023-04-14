@@ -18,6 +18,7 @@ public class ListMessagesQueryHandlerTests
     {
         // Arrange
         var utcNow = DateTime.UtcNow;
+        var username = Guid.NewGuid().ToString();
         var messages = Enumerable.Range(0, 10)
             .Select(x => new Message(Guid.NewGuid().ToString(), "user", Guid.NewGuid().ToString(),
                 utcNow = utcNow.AddMinutes(1)))
@@ -27,7 +28,7 @@ public class ListMessagesQueryHandlerTests
             .ReturnsAsync(messages);
 
         // Act
-        var result = await handler.Handle(new ListMessagesQuery { ConversationId = conversationId },
+        var result = await handler.Handle(new ListMessagesQuery(username, conversationId),
             CancellationToken.None);
 
         // Assert

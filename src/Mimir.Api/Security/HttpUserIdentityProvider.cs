@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Mimir.Application.Security;
+﻿using Mimir.Application.Security;
 
 namespace Mimir.Api.Security;
 
@@ -16,13 +15,6 @@ public class HttpUserIdentityProvider : IUserIdentityProvider
     {
         if (_httpContextAccessor.HttpContext == null)
             throw new InvalidOperationException("HttpContext is not available");
-        var user = _httpContextAccessor.HttpContext.User;
-        if (user.Identity?.IsAuthenticated != true)
-            throw new InvalidOperationException("User is not authenticated");
-        var name = user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(name))
-            throw new InvalidOperationException("Username is not available");
-
-        return name;
+        return _httpContextAccessor.HttpContext.GetUsername();
     }
 }

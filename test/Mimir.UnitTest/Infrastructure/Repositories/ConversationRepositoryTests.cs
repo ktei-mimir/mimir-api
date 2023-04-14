@@ -24,10 +24,11 @@ public class ConversationRepositoryTests
     [Fact]
     public async Task Create_a_conversation()
     {
-        var conversation = new Conversation(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), DateTime.UtcNow);
-        var firstMessage = new Message(conversation.Id, "user", "Hello, world!", DateTime.UtcNow);
+        var conversation = new Conversation(Guid.NewGuid().ToString(),
+            Guid.NewGuid().ToString(),
+            Guid.NewGuid().ToString(), DateTime.UtcNow);
         
-        await _sut.Create(conversation, firstMessage);
+        await _sut.Create(conversation);
         
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
         var savedConversation = await dynamoDb.GetItemAsync(new GetItemRequest
@@ -39,17 +40,7 @@ public class ConversationRepositoryTests
                 {"SK", new AttributeValue($"CONVERSATION#{conversation.CreatedAt}")}
             }
         });
-        var savedMessage = await dynamoDb.GetItemAsync(new GetItemRequest
-        {
-            TableName = DynamoDbUtils.TableName,
-            Key = new Dictionary<string, AttributeValue>
-            {
-                {"PK", new AttributeValue($"CONVERSATION#{conversation.Id}")},
-                {"SK", new AttributeValue($"MESSAGE#{firstMessage.CreatedAt}#{firstMessage.Role}")}
-            }
-        });
         savedConversation.Item.Should().NotBeNull();
-        savedMessage.Item.Should().NotBeNull();
     }
 
     [Fact]
@@ -57,13 +48,14 @@ public class ConversationRepositoryTests
     {
         var fixture = new Fixture();
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
+        var username = Guid.NewGuid().ToString();
         var latestConversation = (await dynamoDb.QueryAsync(new QueryRequest
         {
             IndexName = "GSI1",
             KeyConditionExpression = "GSI1PK = :pk",
             ExpressionAttributeValues = new Dictionary<string, AttributeValue>
             {
-                { ":pk", new AttributeValue("CONVERSATION") }
+                { ":pk", new AttributeValue($"{username}#CONVERSATION") }
             },
             ScanIndexForward = false,
             Limit = 1,
@@ -74,7 +66,9 @@ public class ConversationRepositoryTests
         if (latestConversation != null)
             timestampNow = Convert.ToInt64(latestConversation["GSI1SK"].S) + 1000;
         var conversations = Enumerable.Range(0, 3)
-            .Select(_ => new Conversation(Guid.NewGuid().ToString(), fixture.Create<string>(),
+            .Select(_ => new Conversation(Guid.NewGuid().ToString(),
+                username,
+                fixture.Create<string>(),
                 timestampNow += 1000))
             .ToList();
         foreach (var conversation in conversations)
@@ -83,7 +77,7 @@ public class ConversationRepositoryTests
                 .ToAttributeMap();
             item["PK"] = new AttributeValue($"CONVERSATION#{conversation.Id}");
             item["SK"] = new AttributeValue($"CONVERSATION#{conversation.CreatedAt}");
-            item["GSI1PK"] = new AttributeValue("CONVERSATION");
+            item["GSI1PK"] = new AttributeValue($"{username}#CONVERSATION");
             item["GSI1SK"] = new AttributeValue(conversation.CreatedAt.ToString());
             await dynamoDb.PutItemAsync(new PutItemRequest
             {
@@ -92,7 +86,7 @@ public class ConversationRepositoryTests
             });
         }
 
-        var actual = await _sut.ListAll(limit: 3);
+        var actual = await _sut.ListByUsername(username, limit: 3);
 
         var sorted = conversations.OrderByDescending(x => x.CreatedAt).ToList();
         actual.Should().BeEquivalentTo(sorted, options => options.WithStrictOrdering());
