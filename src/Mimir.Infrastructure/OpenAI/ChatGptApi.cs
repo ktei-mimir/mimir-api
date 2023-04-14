@@ -38,6 +38,7 @@ public class ChatGptApi : IChatGptApi
 
             var messageContentBuilder = new StringBuilder();
             await foreach (var completion in completionResult.WithCancellation(ct))
+            {
                 if (completion.Successful)
                 {
                     if (completion.Choices.FirstOrDefault()?.Delta is not { } delta) continue;
@@ -52,6 +53,7 @@ public class ChatGptApi : IChatGptApi
                     throw new OpenAIAPIException(
                         $"Chat completion failed: {completion.Error.Code} - {completion.Error.Message}");
                 }
+            }
 
             return new ChatCompletion
             {
