@@ -18,7 +18,9 @@ public class ListConversationsQueryHandlerTests
         ListConversationsQueryHandler sut)
     {
         // Arrange
-        conversationRepositoryMock.Setup(x => x.ListAll(Limits.MaxConversationsPerRequest, default))
+        conversationRepositoryMock.Setup(x => x.ListByUsername(
+                It.IsAny<string>(),
+                Limits.MaxConversationsPerRequest, default))
             .ReturnsAsync(conversations);
 
         // Act
@@ -26,6 +28,8 @@ public class ListConversationsQueryHandlerTests
 
         // Assert
         result.Should().BeEquivalentTo(conversations);
-        conversationRepositoryMock.Verify(x => x.ListAll(Limits.MaxConversationsPerRequest, default), Times.Once);
+        conversationRepositoryMock.Verify(x => x.ListByUsername(
+            It.IsAny<string>(),
+            Limits.MaxConversationsPerRequest, default), Times.Once);
     }
 }

@@ -28,7 +28,7 @@ public class ListConversationsEndpoint : EndpointWithoutRequest<ListConversation
 
     public override async Task<ListConversationsResponse> ExecuteAsync(CancellationToken ct)
     {
-        var query = new ListConversationsQuery();
+        var query = new ListConversationsQuery(HttpContext.GetUsername());
         var conversations = await _sender.Send(query, ct);
         var items = _mapper.Map<ConversationDto[]>(conversations);
         return new ListConversationsResponse { Items = items };

@@ -16,7 +16,9 @@ public class CreateConversationCommandHandlerTests
         CreateConversationCommandHandler sut)
     {
         // Arrange
-        var conversation = new Conversation(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), DateTime.UtcNow);
+        var conversation = new Conversation(Guid.NewGuid().ToString(), 
+            Guid.NewGuid().ToString(),
+            Guid.NewGuid().ToString(), DateTime.UtcNow);
         chatGptApiMock.Setup(x => x.CreateCompletion(It.IsAny<CreateCompletionRequest>(), default))
             .ReturnsAsync(new Completion
             {

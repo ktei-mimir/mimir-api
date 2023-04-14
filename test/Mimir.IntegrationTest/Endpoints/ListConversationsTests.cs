@@ -18,9 +18,12 @@ public class ListConversationsTests : EndpointTestBase
     public async Task List_conversations()
     {
         var fixture = new Fixture();
+        var username = fixture.Create<string>();
         var conversations = Enumerable.Range(0, 2)
             .Select(_ =>
-                new Conversation(Guid.NewGuid().ToString(), fixture.Create<string>(), fixture.Create<DateTime>()))
+                new Conversation(Guid.NewGuid().ToString(), 
+                    username,
+                    fixture.Create<string>(), fixture.Create<DateTime>()))
             .ToArray();
         using (var scope = Factory.Services.CreateScope())
         {

@@ -22,12 +22,15 @@ public class CreateMessageTests : EndpointTestBase
     public async Task Create_a_message()
     {
         var fixture = new Fixture().Customize(new AutoMoqCustomization { ConfigureMembers = true });
+        var username = fixture.Create<string>();
         var chatCompletion = fixture.Create<ChatCompletion>();
         var conversationId = Guid.NewGuid().ToString();
         using (var scope = Factory.Services.CreateScope())
         {
             var conversationRepository = scope.ServiceProvider.GetRequiredService<IConversationRepository>();
-            await conversationRepository.Create(new Conversation(conversationId, Guid.NewGuid().ToString(),
+            await conversationRepository.Create(new Conversation(
+                conversationId,
+                username, Guid.NewGuid().ToString(),
                 DateTime.UtcNow));
         }
 
@@ -36,13 +39,6 @@ public class CreateMessageTests : EndpointTestBase
             {
                 builder.ConfigureTestServices(services =>
                 {
-                    // var mockHttpMessageHandler = new MockHttpMessageHandler();
-                    // mockHttpMessageHandler.When("/v1/chat/completions")
-                    //     .Respond("application/json",
-                    //         JsonSerializer.Serialize(chatCompletion));
-                    // services.AddRefitClient<IChatGptApi>()
-                    //     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://test.com"))
-                    //     .ConfigurePrimaryHttpMessageHandler(() => mockHttpMessageHandler);
                     var chatGptApiMock = new Mock<IChatGptApi>();
                     chatGptApiMock.Setup(m =>
                             m.CreateChatCompletion(It.IsAny<CreateChatCompletionRequest>(),

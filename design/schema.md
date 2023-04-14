@@ -11,4 +11,4 @@
 
 | GSI1PK                  | GSI1SK      |
 |-------------------------|-------------|
-| [CONVERSATION\|MESSAGE] | [CreatedAt] |
+| [Username]#CONVERSATION | [CreatedAt] |
