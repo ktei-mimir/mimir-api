@@ -136,7 +136,7 @@ builder.Services.AddCors(cors =>
 {
     cors.AddPolicy("AllowLocal", policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://localhost:3000")
+        policyBuilder.WithOrigins("http://localhost:3000", "https://askmimir.net")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
