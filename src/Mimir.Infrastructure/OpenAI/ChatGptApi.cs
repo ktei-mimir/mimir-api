@@ -24,21 +24,23 @@ public class ChatGptApi : IChatGptApi
             Action<string>? action,
             CancellationToken ct)
         {
+            var messages = createChatCompletionRequest.Messages.Select(m => m.Role switch
+            {
+                Roles.User => ChatMessage.FromUser(m.Content),
+                Roles.Assistant => ChatMessage.FromAssistant(m.Content),
+                _ => throw new NotSupportedException($"Role {m.Role} is not supported")
+            }).ToList();
+            AppendSystemMessage(messages,
+                "If your answer contains any code snippet, please use the code block syntax for code snippets.");
             var completionResult = _openAIService.ChatCompletion.CreateCompletionAsStream(
                 new ChatCompletionCreateRequest
                 {
                     Model = OpenAIModels.Gpt3Turbo,
-                    Messages = createChatCompletionRequest.Messages.Select(m => m.Role switch
-                    {
-                        Roles.User => ChatMessage.FromUser(m.Content),
-                        Roles.Assistant => ChatMessage.FromAssistant(m.Content),
-                        _ => throw new NotSupportedException($"Role {m.Role} is not supported")
-                    }).ToList()
+                    Messages = messages
                 }, cancellationToken: ct);
 
             var messageContentBuilder = new StringBuilder();
             await foreach (var completion in completionResult.WithCancellation(ct))
-            {
                 if (completion.Successful)
                 {
                     if (completion.Choices.FirstOrDefault()?.Delta is not { } delta) continue;
@@ -53,7 +55,6 @@ public class ChatGptApi : IChatGptApi
                     throw new OpenAIAPIException(
                         $"Chat completion failed: {completion.Error.Code} - {completion.Error.Message}");
                 }
-            }
 
             return new ChatCompletion
             {
@@ -112,5 +113,13 @@ public class ChatGptApi : IChatGptApi
             .Handle<OpenAIAPIException>()
             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
             .ExecuteAsync(() => ExecuteCompletion(request, cancellationToken));
+    }
+
+    /// <summary>
+    ///     Append System ChatMessage before the last item in a message list
+    /// </summary>
+    private static void AppendSystemMessage(List<ChatMessage> messages, string content)
+    {
+        messages.Insert(messages.Count - 1, ChatMessage.FromSystem(content));
     }
 }

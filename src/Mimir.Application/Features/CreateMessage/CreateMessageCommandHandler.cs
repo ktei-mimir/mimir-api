@@ -1,5 +1,4 @@
-﻿using System.Text;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Mimir.Application.Configurations;
@@ -46,7 +45,7 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
             Messages = historyMessages.Concat(new[] { userMessage }).Select(x => new GptMessage
             {
                 Role = x.Role,
-                Content = x.Role == Roles.Assistant ? x.Content : InstructAssistantMessageFormat(x.Content)
+                Content = x.Content
             }).ToList()
         }, messageContent => hubUser?.StreamMessage(new StreamMessageRequest
         {
@@ -68,13 +67,5 @@ public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand,
         // save both user message and assistant message
         await _messageRepository.Create(new[] { userMessage, assistantMessage }, cancellationToken);
         return assistantMessage;
-    }
-
-    private static string InstructAssistantMessageFormat(string userMessage)
-    {
-        var sb = new StringBuilder(userMessage);
-        sb.AppendLine("============YOU MUST:============");
-        sb.AppendLine("USE MARKDOWN FORMAT FOR YOUR REPLY");
-        return sb.ToString();
     }
 }
