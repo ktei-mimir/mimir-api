@@ -26,6 +26,6 @@ jobs:
       - name: Run docker-compose
         run: docker-compose up -d
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --no-restore --verbosity minimal
       - name: Stop docker-compose
         run: docker-compose down
