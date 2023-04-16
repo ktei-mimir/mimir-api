@@ -8,15 +8,16 @@ using Mimir.Domain.Helpers;
 using Mimir.Domain.Models;
 using Mimir.Infrastructure.Configurations;
 using Mimir.Infrastructure.Repositories;
+using Mimir.UnitTest.Fixtures;
 using Mimir.UnitTest.Helpers;
 
 namespace Mimir.UnitTest.Infrastructure.Repositories;
 
-public class ConversationRepositoryTests
+public class ConversationRepositoryTests : RepositoryTestBase
 {
     private readonly ConversationRepository _sut;
 
-    public ConversationRepositoryTests()
+    public ConversationRepositoryTests(DynamoDBFixture dynamoDbFixture) : base(dynamoDbFixture)
     {
         _sut = CreateSut();
     }
@@ -27,17 +28,17 @@ public class ConversationRepositoryTests
         var conversation = new Conversation(Guid.NewGuid().ToString(),
             Guid.NewGuid().ToString(),
             Guid.NewGuid().ToString(), DateTime.UtcNow);
-        
+
         await _sut.Create(conversation);
-        
+
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
         var savedConversation = await dynamoDb.GetItemAsync(new GetItemRequest
         {
             TableName = DynamoDbUtils.TableName,
             Key = new Dictionary<string, AttributeValue>
             {
-                {"PK", new AttributeValue($"CONVERSATION#{conversation.Id}")},
-                {"SK", new AttributeValue($"CONVERSATION#{conversation.CreatedAt}")}
+                { "PK", new AttributeValue($"CONVERSATION#{conversation.Id}") },
+                { "SK", new AttributeValue($"CONVERSATION#{conversation.CreatedAt}") }
             }
         });
         savedConversation.Item.Should().NotBeNull();
@@ -86,12 +87,12 @@ public class ConversationRepositoryTests
             });
         }
 
-        var actual = await _sut.ListByUsername(username, limit: 3);
+        var actual = await _sut.ListByUsername(username, 3);
 
         var sorted = conversations.OrderByDescending(x => x.CreatedAt).ToList();
         actual.Should().BeEquivalentTo(sorted, options => options.WithStrictOrdering());
     }
-    
+
     private static ConversationRepository CreateSut()
     {
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
