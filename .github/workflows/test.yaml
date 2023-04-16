@@ -2,8 +2,9 @@ name: Test dotnet app
 
 on:
   push:
-    branches:
-      - develop
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
 
 jobs:
   test:
