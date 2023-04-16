@@ -58,6 +58,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "vpc", "vpc", "{9E163612-17E
 		terraform\vpc\variables.tf = terraform\vpc\variables.tf
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{FEE1653E-188F-44AA-B61F-057270AF2C7D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{DC5052BF-2BDA-4492-B68A-77C7BF66A7B2}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\deployment.yaml = .github\workflows\deployment.yaml
+		.github\workflows\test.yaml = .github\workflows\test.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,6 +86,8 @@ Global
 		{39D7A89C-E6AD-470B-A337-A394AACA2174} = {8414DFAF-1C87-48BD-8D98-5FCDF193D052}
 		{1753AA1D-B4EB-45A6-BA04-A47DCD2CC878} = {8414DFAF-1C87-48BD-8D98-5FCDF193D052}
 		{9E163612-17E3-4884-B42A-A6408058EF93} = {8414DFAF-1C87-48BD-8D98-5FCDF193D052}
+		{FEE1653E-188F-44AA-B61F-057270AF2C7D} = {44414A7F-D879-4371-AF8A-DBB9FEB501B5}
+		{DC5052BF-2BDA-4492-B68A-77C7BF66A7B2} = {FEE1653E-188F-44AA-B61F-057270AF2C7D}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7492AC4A-2946-4F68-BF91-384911B884C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
