@@ -25,7 +25,7 @@ public class ListMessagesTests : EndpointTestBase
         {
             var conversationRepository = scope.ServiceProvider.GetRequiredService<IConversationRepository>();
             var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
-            await conversationRepository.Create(new Conversation(conversationId, 
+            await conversationRepository.Create(new Conversation(conversationId,
                 TestAuthHandler.DefaultUsername,
                 fixture.Create<string>(),
                 DateTime.UtcNow));

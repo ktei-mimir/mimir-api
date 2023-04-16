@@ -7,6 +7,7 @@ using Mimir.IntegrationTest.Helpers;
 
 namespace Mimir.IntegrationTest.Endpoints;
 
+[Collection(EndpointTestCollection.CollectionName)]
 public class EndpointTestBase : IClassFixture<WebApplicationFactory<Program>>
 {
     protected EndpointTestBase(WebApplicationFactory<Program> factory)
@@ -31,6 +32,6 @@ public class EndpointTestBase : IClassFixture<WebApplicationFactory<Program>>
             });
         });
     }
-    
+
     protected WebApplicationFactory<Program> Factory { get; }
 }

@@ -8,12 +8,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Mimir.Api.Model.Conversations;
 using Mimir.Application.Features.CreateConversation;
 using Mimir.Application.OpenAI;
+using Mimir.UnitTest.Fixtures;
 
 namespace Mimir.IntegrationTest.Endpoints;
 
 public class CreateConversationTests : EndpointTestBase
 {
-    public CreateConversationTests(WebApplicationFactory<Program> factory) : base(factory)
+    public CreateConversationTests(WebApplicationFactory<Program> factory,
+        DynamoDBFixture dynamoDbFixture) : base(factory)
     {
     }
 

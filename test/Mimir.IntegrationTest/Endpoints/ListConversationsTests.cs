@@ -5,12 +5,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Mimir.Api.Model.Conversations;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
+using Mimir.IntegrationTest.Helpers;
 
 namespace Mimir.IntegrationTest.Endpoints;
 
 public class ListConversationsTests : EndpointTestBase
 {
-    public ListConversationsTests(WebApplicationFactory<Program> factory) : base(factory)
+    public ListConversationsTests(WebApplicationFactory<Program> factory) : base(
+        factory)
     {
     }
 
@@ -18,20 +20,17 @@ public class ListConversationsTests : EndpointTestBase
     public async Task List_conversations()
     {
         var fixture = new Fixture();
-        var username = fixture.Create<string>();
+        var username = TestAuthHandler.DefaultUsername;
         var conversations = Enumerable.Range(0, 2)
             .Select(_ =>
-                new Conversation(Guid.NewGuid().ToString(), 
+                new Conversation(Guid.NewGuid().ToString(),
                     username,
                     fixture.Create<string>(), fixture.Create<DateTime>()))
             .ToArray();
         using (var scope = Factory.Services.CreateScope())
         {
             var conversationRepository = scope.ServiceProvider.GetRequiredService<IConversationRepository>();
-            foreach (var conversation in conversations)
-            {
-                await conversationRepository.Create(conversation);
-            }
+            foreach (var conversation in conversations) await conversationRepository.Create(conversation);
         }
 
         var client = Factory

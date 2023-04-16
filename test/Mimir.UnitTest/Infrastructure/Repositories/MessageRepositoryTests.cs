@@ -7,15 +7,16 @@ using Microsoft.Extensions.Options;
 using Mimir.Domain.Models;
 using Mimir.Infrastructure.Configurations;
 using Mimir.Infrastructure.Repositories;
+using Mimir.UnitTest.Fixtures;
 using Mimir.UnitTest.Helpers;
 
 namespace Mimir.UnitTest.Infrastructure.Repositories;
 
-public class MessageRepositoryTests
+public class MessageRepositoryTests : RepositoryTestBase
 {
     private readonly MessageRepository _sut;
 
-    public MessageRepositoryTests()
+    public MessageRepositoryTests(DynamoDBFixture dynamoDbFixture) : base(dynamoDbFixture)
     {
         _sut = CreateSut();
     }

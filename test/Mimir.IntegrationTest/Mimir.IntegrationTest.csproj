@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Mimir.Api\Mimir.Api.csproj" />
+    <ProjectReference Include="..\Mimir.UnitTest\Mimir.UnitTest.csproj" />
   </ItemGroup>
 
 </Project>
