@@ -150,7 +150,7 @@ builder.Services.AddScoped<IUserIdentityProvider, HttpUserIdentityProvider>();
 builder.WebHost.UseUrls("http://*:5000");
 
 var app = builder.Build();
-app.MapHealthChecks("/");
+app.MapHealthChecks("/healthz");
 
 app.UseCors("AllowLocal");
 app.MapHub<ConversationHub>("/hubs/conversation");

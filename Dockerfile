@@ -9,6 +9,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0.15-alpine3.17-arm64v8
 WORKDIR /app
 COPY --from=build /app ./
 EXPOSE 5000
+RUN apk --no-cache add curl
+HEALTHCHECK CMD curl --fail http://localhost:5000/healthz || exit 1
 ENTRYPOINT ["dotnet", "Mimir.Api.dll"]
 
 # docker build -t mimir-api .
