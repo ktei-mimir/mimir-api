@@ -139,6 +139,7 @@ builder.Services.AddCors(cors =>
     });
 });
 
+
 // SignalR registration
 builder.Services.AddSignalR();
 
