@@ -4,7 +4,6 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using AutoFixture;
 using Microsoft.Extensions.Options;
-using Mimir.Domain.Helpers;
 using Mimir.Domain.Models;
 using Mimir.Infrastructure.Configurations;
 using Mimir.Infrastructure.Repositories;
@@ -23,13 +22,16 @@ public class ConversationRepositoryTests : RepositoryTestBase
     }
 
     [Fact]
-    public async Task Create_a_conversation()
+    public async Task Create_a_conversation_with_2_messages()
     {
         var conversation = new Conversation(Guid.NewGuid().ToString(),
             Guid.NewGuid().ToString(),
             Guid.NewGuid().ToString(), DateTime.UtcNow);
+        var message1 = new Message(conversation.Id, "system", "Hello, world!", DateTime.UtcNow.AddSeconds(1));
+        var message2 = new Message(conversation.Id, "system", "Goodbye, world!", DateTime.UtcNow.AddSeconds(1));
+        var messages = new List<Message> { message1, message2 };
 
-        await _sut.Create(conversation);
+        await _sut.Create(conversation, messages);
 
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
         var savedConversation = await dynamoDb.GetItemAsync(new GetItemRequest
@@ -41,7 +43,18 @@ public class ConversationRepositoryTests : RepositoryTestBase
                 { "SK", new AttributeValue($"CONVERSATION#{conversation.CreatedAt}") }
             }
         });
+        var savedMessages = await dynamoDb.QueryAsync(new QueryRequest
+        {
+            TableName = DynamoDbUtils.TableName,
+            KeyConditionExpression = "PK = :pk and begins_with(SK, :sk)",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":pk", new AttributeValue($"CONVERSATION#{conversation.Id}") },
+                { ":sk", new AttributeValue("MESSAGE#") }
+            }
+        });
         savedConversation.Item.Should().NotBeNull();
+        savedMessages.Items.Should().HaveCount(2);
     }
 
     [Fact]
@@ -50,27 +63,12 @@ public class ConversationRepositoryTests : RepositoryTestBase
         var fixture = new Fixture();
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
         var username = Guid.NewGuid().ToString();
-        var latestConversation = (await dynamoDb.QueryAsync(new QueryRequest
-        {
-            IndexName = "GSI1",
-            KeyConditionExpression = "GSI1PK = :pk",
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":pk", new AttributeValue($"{username}#CONVERSATION") }
-            },
-            ScanIndexForward = false,
-            Limit = 1,
-            TableName = DynamoDbUtils.TableName,
-            ProjectionExpression = "GSI1SK"
-        })).Items.SingleOrDefault();
-        var timestampNow = DateTime.UtcNow.ToUnixTimeStamp();
-        if (latestConversation != null)
-            timestampNow = Convert.ToInt64(latestConversation["GSI1SK"].S) + 1000;
+        var utcNow = DateTime.UtcNow;
         var conversations = Enumerable.Range(0, 3)
             .Select(_ => new Conversation(Guid.NewGuid().ToString(),
                 username,
                 fixture.Create<string>(),
-                timestampNow += 1000))
+                utcNow = utcNow.AddMinutes(1)))
             .ToList();
         foreach (var conversation in conversations)
         {

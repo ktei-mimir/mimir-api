@@ -23,22 +23,8 @@ public class ConversationRepository : IConversationRepository
         _options = optionsAccessor.Value;
     }
 
-    public async Task Create(Conversation conversation,
+    public async Task<List<Conversation>> ListByUsername(string username, int limit = 50,
         CancellationToken cancellationToken = default)
-    {
-        var conversationDocument = _dynamoDbContext.ToDocument(conversation);
-        conversationDocument["PK"] = $"CONVERSATION#{conversation.Id}";
-        conversationDocument["SK"] = $"CONVERSATION#{conversation.CreatedAt}";
-        conversationDocument["GSI1PK"] = $"{conversation.Username}#CONVERSATION";
-        conversationDocument["GSI1SK"] = conversation.CreatedAt.ToString();
-        await _dynamoDb.PutItemAsync(new PutItemRequest
-        {
-            Item = conversationDocument.ToAttributeMap(),
-            TableName = _options.TableName
-        }, cancellationToken);
-    }
-
-    public async Task<List<Conversation>> ListByUsername(string username, int limit = 50, CancellationToken cancellationToken = default)
     {
         var request = new QueryRequest
         {
@@ -57,5 +43,46 @@ public class ConversationRepository : IConversationRepository
 
         return response.Items
             .Select(item => _dynamoDbContext.FromDocument<Conversation>(Document.FromAttributeMap(item))).ToList();
+    }
+
+    public async Task Create(Conversation conversation, IEnumerable<Message>? messages = null,
+        CancellationToken cancellationToken = default)
+    {
+        var conversationDocument = _dynamoDbContext.ToDocument(conversation);
+        conversationDocument["PK"] = $"CONVERSATION#{conversation.Id}";
+        conversationDocument["SK"] = $"CONVERSATION#{conversation.CreatedAt}";
+        conversationDocument["GSI1PK"] = $"{conversation.Username}#CONVERSATION";
+        conversationDocument["GSI1SK"] = conversation.CreatedAt.ToString();
+        var transactItems = new List<TransactWriteItem>
+        {
+            new()
+            {
+                Put = new Put
+                {
+                    Item = conversationDocument.ToAttributeMap(),
+                    TableName = _options.TableName
+                }
+            }
+        };
+        if (messages != null)
+            transactItems.AddRange(messages.Select(m =>
+            {
+                var messageDocument = _dynamoDbContext.ToDocument(m);
+                messageDocument["PK"] = $"CONVERSATION#{conversation.Id}";
+                messageDocument["SK"] = $"MESSAGE#{m.CreatedAt}#{m.Role}";
+                return messageDocument;
+            }).Select(messageDocument => new TransactWriteItem
+            {
+                Put = new Put
+                {
+                    Item = messageDocument.ToAttributeMap(),
+                    TableName = _options.TableName
+                }
+            }));
+
+        await _dynamoDb.TransactWriteItemsAsync(new TransactWriteItemsRequest
+        {
+            TransactItems = transactItems
+        }, cancellationToken);
     }
 }

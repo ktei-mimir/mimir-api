@@ -10,7 +10,8 @@ namespace Mimir.UnitTest.Application.Features;
 
 public class ListMessagesQueryHandlerTests
 {
-    [Theory, MoqAutoData]
+    [Theory]
+    [MoqAutoData]
     public async Task List_conversation_messages(
         string conversationId,
         [Frozen] Mock<IMessageRepository> mockRepository,
@@ -19,13 +20,16 @@ public class ListMessagesQueryHandlerTests
         // Arrange
         var utcNow = DateTime.UtcNow;
         var username = Guid.NewGuid().ToString();
-        var messages = Enumerable.Range(0, 10)
+        var userMessages = Enumerable.Range(0, 10)
             .Select(x => new Message(Guid.NewGuid().ToString(), "user", Guid.NewGuid().ToString(),
                 utcNow = utcNow.AddMinutes(1)))
             .ToList();
         mockRepository
             .Setup(x => x.ListByConversationId(conversationId, Limits.MaxMessagesPerRequest, CancellationToken.None))
-            .ReturnsAsync(messages);
+            .ReturnsAsync(new Message[]
+            {
+                new(Guid.NewGuid().ToString(), "system", Guid.NewGuid().ToString(), utcNow = utcNow.AddMinutes(-1))
+            }.Concat(userMessages).ToList());
 
         // Act
         var result = await handler.Handle(new ListMessagesQuery(username, conversationId),
@@ -33,6 +37,6 @@ public class ListMessagesQueryHandlerTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().BeEquivalentTo(messages);
+        result.Should().BeEquivalentTo(userMessages);
     }
 }
