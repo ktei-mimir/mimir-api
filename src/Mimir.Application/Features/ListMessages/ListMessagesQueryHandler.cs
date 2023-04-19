@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MediatR;
 using Mimir.Application.Configurations;
+using Mimir.Application.OpenAI;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 
@@ -21,6 +22,7 @@ public class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuery, List<
         var messages = await _messageRepository.ListByConversationId(request.ConversationId,
             Limits.MaxMessagesPerRequest,
             cancellationToken);
-        return messages;
+        var conversationMessages = messages.Where(x => x.Role is Roles.User or Roles.Assistant).ToList();
+        return conversationMessages;
     }
 }

@@ -12,9 +12,9 @@ namespace Mimir.Application.Features.CreateConversation;
 public class CreateConversationCommandHandler : IRequestHandler<CreateConversationCommand, CreateConversationResponse>
 {
     private readonly IChatGptApi _chatGptApi;
-    private readonly IUserIdentityProvider _userIdentityProvider;
     private readonly IConversationRepository _conversationRepository;
     private readonly IDateTime _dateTime;
+    private readonly IUserIdentityProvider _userIdentityProvider;
 
     public CreateConversationCommandHandler(IChatGptApi chatGptApi, IUserIdentityProvider userIdentityProvider,
         IConversationRepository conversationRepository, IDateTime dateTime)
@@ -33,17 +33,21 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
         var completion = await _chatGptApi.CreateCompletion(new CreateCompletionRequest
         {
             Prompt = CommandBuilder.Summarize(command.Message),
-            MaxTokens = 20
+            MaxTokens = 50
         }, cancellationToken);
-        var conversationTitle = completion.Choices.First().Text;
+        var conversationTitle = completion.Choices.First().Text.Trim().Trim('"');
         await _conversationRepository.Create(
             new Conversation(newConversationId, username, conversationTitle, _dateTime.UtcNow()),
+            new Message[]
+            {
+                new(newConversationId, Roles.System, SystemPrompt.DefaultPrompt, _dateTime.UtcNow())
+            },
             cancellationToken);
 
         var response = new CreateConversationResponse
         {
             Id = newConversationId,
-            Title = conversationTitle,
+            Title = conversationTitle
         };
 
         return response;
