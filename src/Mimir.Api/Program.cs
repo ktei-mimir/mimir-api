@@ -59,7 +59,10 @@ builder.Services.AddAuthentication(options =>
                 if (!string.IsNullOrEmpty(accessToken) &&
                     path.StartsWithSegments("/hubs/conversation"))
                     // Read the token out of the query string
+                {
                     context.Token = accessToken;
+                }
+
                 return Task.CompletedTask;
             }
         };
@@ -90,7 +93,10 @@ if (awsOptions.DefaultClientConfig.ServiceURL?.StartsWith("http://localhost") ==
     // it doesn't matter what credentials we use here,
     // because if we're using local DynamoDB, the credentials are ignored
     // but we need to set them to something, otherwise the AWS SDK will throw an exception
+{
     awsOptions.Credentials = new BasicAWSCredentials("test", "test");
+}
+
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
@@ -159,7 +165,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseFastEndpoints();
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) app.UseSwaggerGen();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwaggerGen();
+}
 
 app.UseExceptionHandler(errorApp =>
 {
