@@ -21,14 +21,15 @@ public class ListMessagesQueryHandlerTests
         var utcNow = DateTime.UtcNow;
         var username = Guid.NewGuid().ToString();
         var userMessages = Enumerable.Range(0, 10)
-            .Select(x => new Message(Guid.NewGuid().ToString(), "user", Guid.NewGuid().ToString(),
+            .Select(x => Message.UserMessage(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(),
                 utcNow = utcNow.AddMinutes(1)))
             .ToList();
         mockRepository
             .Setup(x => x.ListByConversationId(conversationId, Limits.MaxMessagesPerRequest, CancellationToken.None))
             .ReturnsAsync(new Message[]
             {
-                new(Guid.NewGuid().ToString(), "system", Guid.NewGuid().ToString(), utcNow = utcNow.AddMinutes(-1))
+                new(Guid.NewGuid().ToString(), "system", Guid.NewGuid().ToString(), null,
+                    utcNow = utcNow.AddMinutes(-1))
             }.Concat(userMessages).ToList());
 
         // Act

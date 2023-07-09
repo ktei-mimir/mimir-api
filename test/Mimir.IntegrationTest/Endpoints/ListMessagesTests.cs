@@ -3,7 +3,6 @@ using AutoFixture;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Mimir.Api.Model.Messages;
-using Mimir.Application.OpenAI;
 using Mimir.Domain.Models;
 using Mimir.Domain.Repositories;
 using Mimir.IntegrationTest.Helpers;
@@ -31,11 +30,11 @@ public class ListMessagesTests : EndpointTestBase
                 DateTime.UtcNow));
             var utcNow = DateTime.UtcNow;
             var messages = Enumerable.Range(0, 30)
-                .Select(_ => new Message(conversationId, Roles.User, fixture.Create<string>(),
+                .Select(_ => Message.UserMessage(conversationId, fixture.Create<string>(),
                     utcNow = utcNow.AddMinutes(1)))
                 .ToList();
 
-            await messageRepository.Create(messages);
+            await messageRepository.Save(messages);
         }
 
         var client = Factory

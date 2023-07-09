@@ -27,8 +27,8 @@ public class ConversationRepositoryTests : RepositoryTestBase
         var conversation = new Conversation(Guid.NewGuid().ToString(),
             Guid.NewGuid().ToString(),
             Guid.NewGuid().ToString(), DateTime.UtcNow);
-        var message1 = new Message(conversation.Id, "system", "Hello, world!", DateTime.UtcNow.AddSeconds(1));
-        var message2 = new Message(conversation.Id, "system", "Goodbye, world!", DateTime.UtcNow.AddSeconds(1));
+        var message1 = new Message(conversation.Id, "system", "Hello, world!", null, DateTime.UtcNow.AddSeconds(1));
+        var message2 = new Message(conversation.Id, "system", "Goodbye, world!", null, DateTime.UtcNow.AddSeconds(1));
         var messages = new List<Message> { message1, message2 };
 
         await _sut.Create(conversation, messages);
