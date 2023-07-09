@@ -1,7 +1,10 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
+using Microsoft.Extensions.Options;
 using Mimir.Application.OpenAI;
 using Mimir.Domain.Exceptions;
 using Mimir.Domain.Models;
+using Mimir.Infrastructure.Configurations;
 using OpenAI.GPT3.Interfaces;
 using OpenAI.GPT3.ObjectModels.RequestModels;
 using Polly;
@@ -10,11 +13,14 @@ namespace Mimir.Infrastructure.OpenAI;
 
 public class ChatGptApi : IChatGptApi
 {
+    private const int MinUpdateIntervalMs = 100;
     private readonly IOpenAIService _openAIService;
+    private readonly OpenAIOptions _options;
 
-    public ChatGptApi(IOpenAIService openAIService)
+    public ChatGptApi(IOpenAIService openAIService, IOptions<OpenAIOptions> openAIOptions)
     {
         _openAIService = openAIService;
+        _options = openAIOptions.Value;
     }
 
     public async Task<ChatCompletion> CreateChatCompletion(CreateChatCompletionRequest request,
@@ -36,11 +42,12 @@ public class ChatGptApi : IChatGptApi
             var completionResult = _openAIService.ChatCompletion.CreateCompletionAsStream(
                 new ChatCompletionCreateRequest
                 {
-                    Model = OpenAIModels.Gpt3Turbo,
+                    Model = _options.GptModel,
                     Messages = chatMessages
                 }, cancellationToken: ct);
 
             var messageContentBuilder = new StringBuilder();
+            var sw = Stopwatch.StartNew();
             await foreach (var completion in completionResult.WithCancellation(ct))
             {
                 if (completion.Successful)
@@ -51,7 +58,13 @@ public class ChatGptApi : IChatGptApi
                     }
 
                     messageContentBuilder.Append(delta.Content);
+                    if (sw.ElapsedMilliseconds < MinUpdateIntervalMs)
+                    {
+                        continue;
+                    }
+
                     action?.Invoke(messageContentBuilder.ToString());
+                    sw.Restart();
                 }
                 else
                 {
