@@ -24,9 +24,9 @@ public class MessageRepositoryTests : RepositoryTestBase
     [Fact]
     public async Task Create_a_message()
     {
-        var message = new Message(Guid.NewGuid().ToString(), "user", "Hello, world!", DateTime.UtcNow);
+        var message = Message.UserMessage(Guid.NewGuid().ToString(), "Hello, world!", DateTime.UtcNow);
 
-        await _sut.Create(new[] { message });
+        await _sut.Save(new[] { message });
 
         var dynamoDb = DynamoDbUtils.CreateLocalDynamoDbClient();
         var savedMessage = await dynamoDb.GetItemAsync(new GetItemRequest
@@ -62,9 +62,9 @@ public class MessageRepositoryTests : RepositoryTestBase
         var utcNow = DateTime.UtcNow;
         var messages = Enumerable.Range(0, 3)
             .Select(index =>
-                new Message(conversationId, "user", fixture.Create<string>(), utcNow.AddMinutes(index)))
+                Message.UserMessage(conversationId, fixture.Create<string>(), utcNow.AddMinutes(index)))
             .ToList();
-        await _sut.Create(messages);
+        await _sut.Save(messages);
 
         var conversationMessages = await _sut.ListByConversationId(conversationId, 3);
 

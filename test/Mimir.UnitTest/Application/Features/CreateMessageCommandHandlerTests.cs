@@ -13,7 +13,8 @@ namespace Mimir.UnitTest.Application.Features;
 
 public class CreateMessageCommandHandlerTests
 {
-    [Theory, MoqAutoData]
+    [Theory]
+    [MoqAutoData]
     public async Task Add_a_message_to_a_conversation(
         [Frozen] Mock<IMessageRepository> messageRepositoryMock,
         [Frozen] Mock<IDateTime> dateTimeMock,
@@ -23,10 +24,11 @@ public class CreateMessageCommandHandlerTests
         // Arrange
         var fixture = new Fixture();
         var command = fixture.Create<CreateMessageCommand>();
-        var userMessage = new Message(command.ConversationId, command.Role, command.Content, DateTime.UtcNow);
+        var userMessage = Message.UserMessage(command.ConversationId, command.Content, DateTime.UtcNow);
         var utcNow = DateTime.UtcNow;
         var historyMessages = Enumerable.Range(0, 2).Select(x =>
                 new Message(command.ConversationId, fixture.Create<string>(), fixture.Create<string>(),
+                    null,
                     utcNow = utcNow.AddMinutes(2)))
             .ToList();
         var gptMessages = historyMessages.Concat(new[] { userMessage }).Select(x => new GptMessage
@@ -35,8 +37,8 @@ public class CreateMessageCommandHandlerTests
             Content = x.Content
         }).ToList();
         var chatCompletion = new Fixture().Create<ChatCompletion>();
-        var assistantMessage = new Message(command.ConversationId, chatCompletion.Choices.First().Message.Role,
-            chatCompletion.Choices.First().Message.Content, utcNow);
+        var assistantMessage = Message.AssistantMessage(command.ConversationId,
+            chatCompletion.Choices.First().Message.Content, command.StreamId, utcNow.AddMilliseconds(1));
 
         messageRepositoryMock
             .Setup(x => x.ListByConversationId(command.ConversationId, Limits.MaxMessagesPerRequest, default))
@@ -53,7 +55,7 @@ public class CreateMessageCommandHandlerTests
         var result = await sut.Handle(command, default);
 
         // Assert
-        result.Should().BeEquivalentTo(assistantMessage);
+        result.Should().BeEquivalentTo(assistantMessage, x => x.Excluding(m => m.CreatedAt));
 
         chatGptApiMock.Verify(
             x => x.CreateChatCompletion(

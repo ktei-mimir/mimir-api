@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Mimir.Application.OpenAI;
 using Mimir.Domain.Exceptions;
+using Mimir.Domain.Models;
 using OpenAI.GPT3.Interfaces;
 using OpenAI.GPT3.ObjectModels.RequestModels;
 using Polly;
@@ -41,20 +42,28 @@ public class ChatGptApi : IChatGptApi
 
             var messageContentBuilder = new StringBuilder();
             await foreach (var completion in completionResult.WithCancellation(ct))
+            {
                 if (completion.Successful)
                 {
-                    if (completion.Choices.FirstOrDefault()?.Delta is not { } delta) continue;
+                    if (completion.Choices.FirstOrDefault()?.Delta is not { } delta)
+                    {
+                        continue;
+                    }
+
                     messageContentBuilder.Append(delta.Content);
                     action?.Invoke(messageContentBuilder.ToString());
                 }
                 else
                 {
                     if (completion.Error == null)
+                    {
                         throw new OpenAIAPIException("Chat completion failed due to unknown error");
+                    }
 
                     throw new OpenAIAPIException(
                         $"Chat completion failed: {completion.Error.Code} - {completion.Error.Message}");
                 }
+            }
 
             return new ChatCompletion
             {
@@ -90,8 +99,11 @@ public class ChatGptApi : IChatGptApi
                 Model = OpenAIModels.Davinci
             }, cancellationToken: ct);
             if (result.Error != null)
+            {
                 throw new OpenAIAPIException(
                     $"Completion failed: {result.Error.Code} - {result.Error.Message}");
+            }
+
             return new Completion
             {
                 Choices = result.Choices.Select(x => new CompletionChoice

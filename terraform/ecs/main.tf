@@ -46,8 +46,8 @@ locals {
 }
 
 resource "aws_ecs_service" "service" {
-  name                               = "${var.app_name}-${var.environment}"
-  cluster                            = local.cluster_name
+  name    = "${var.app_name}-${var.environment}"
+  cluster = local.cluster_name
   # task_definition = aws_ecs_task_definition.task.arn
   desired_count                      = 1
   deployment_maximum_percent         = 100
@@ -100,7 +100,7 @@ resource "aws_iam_policy" "task_execution_role" {
 
 data "aws_iam_policy_document" "task_execution_role_policy" {
   statement {
-    actions   = ["ssm:GetParameters", "ssm:GetParameter"]
+    actions = ["ssm:GetParameters", "ssm:GetParameter"]
     resources = [
       "*"
     ]
@@ -179,7 +179,7 @@ module "ecs" {
 
   cluster_configuration = {
     execute_command_configuration = {
-      logging           = "OVERRIDE"
+      logging = "OVERRIDE"
       log_configuration = {
         cloud_watch_log_group_name = "/aws/ecs/${local.cluster_name}"
       }
@@ -194,8 +194,8 @@ module "ecs" {
 }
 
 module "autoscaling" {
-  source     = "terraform-aws-modules/autoscaling/aws"
-  version    = "~> 6.5"
+  source  = "terraform-aws-modules/autoscaling/aws"
+  version = "~> 6.5"
   depends_on = [
     aws_iam_policy.asg_instance_profile
   ]
@@ -205,7 +205,7 @@ module "autoscaling" {
   key_name      = "mimir-ssh"
 
   use_mixed_instances_policy = true
-  mixed_instances_policy     = {
+  mixed_instances_policy = {
     instances_distribution = {
       on_demand_percentage_above_base_capacity = 0
       spot_instance_pools                      = 2
@@ -220,7 +220,7 @@ module "autoscaling" {
   image_id               = jsondecode(data.aws_ssm_parameter.ecs_optimized_ami.value)["image_id"]
   update_default_version = true
 
-  security_groups    = [module.autoscaling_sg.security_group_id]
+  security_groups = [module.autoscaling_sg.security_group_id]
   network_interfaces = [
     {
       associate_public_ip_address = true
@@ -232,7 +232,7 @@ module "autoscaling" {
   create_iam_instance_profile = true
   iam_role_name               = local.cluster_name
   iam_role_description        = "ECS cluster instance profile role for ${local.cluster_name}"
-  iam_role_policies           = {
+  iam_role_policies = {
     AmazonEC2ContainerServiceforEC2Role = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
     AmazonSSMManagedInstanceCore        = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     AssociateElasticIP                  = aws_iam_policy.asg_instance_profile.arn
@@ -250,7 +250,7 @@ module "autoscaling" {
   }
 
   # Required for  managed_termination_protection = "ENABLED"
-  protect_from_scale_in = true
+  protect_from_scale_in = false
 
   tags = local.tags
 }

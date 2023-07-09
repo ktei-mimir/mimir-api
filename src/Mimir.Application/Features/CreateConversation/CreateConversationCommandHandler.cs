@@ -40,7 +40,7 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
             new Conversation(newConversationId, username, conversationTitle, _dateTime.UtcNow()),
             new Message[]
             {
-                new(newConversationId, Roles.System, SystemPrompt.DefaultPrompt, _dateTime.UtcNow())
+                new(newConversationId, Roles.System, SystemPrompt.DefaultPrompt, null, _dateTime.UtcNow())
             },
             cancellationToken);
 

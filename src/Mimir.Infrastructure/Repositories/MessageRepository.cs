@@ -12,10 +12,10 @@ namespace Mimir.Infrastructure.Repositories;
 
 public class MessageRepository : IMessageRepository
 {
+    private const int MaxBatchSize = 25;
     private readonly IAmazonDynamoDB _dynamoDb;
     private readonly IDynamoDBContext _dynamoDbContext;
     private readonly DynamoDbOptions _options;
-    private const int MaxBatchSize = 25;
 
     public MessageRepository(IAmazonDynamoDB dynamoDb, IDynamoDBContext dynamoDbContext,
         IOptions<DynamoDbOptions> optionsAccessor)
@@ -25,7 +25,7 @@ public class MessageRepository : IMessageRepository
         _options = optionsAccessor.Value;
     }
 
-    public async Task Create(IEnumerable<Message> messages, CancellationToken cancellationToken = default)
+    public async Task Save(IEnumerable<Message> messages, CancellationToken cancellationToken = default)
     {
         var requests = messages.Select(message =>
         {
@@ -51,7 +51,6 @@ public class MessageRepository : IMessageRepository
             await _dynamoDb.TransactWriteItemsAsync(transactWriteRequest, cancellationToken);
         }
     }
-
 
     public async Task<List<Message>> ListByConversationId(string conversationId, int limit = 20,
         CancellationToken cancellationToken = default)
